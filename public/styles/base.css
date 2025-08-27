@@ -1,0 +1,375 @@
+/* Base styles */
+:root {
+    /* Gray Scale System */
+    --black: #000000;               /* Pure black */
+    --gray-900: #0a0a0a;            /* Darkest - page background */
+    --gray-800: #121212;            /* Content containers */
+    --gray-600: #2a2a2a;            /* Elevated surfaces */
+    --gray-500: #333333;            /* Controls/interactive */
+    --gray-400: #444444;            /* Borders/separators */
+    --gray-350: #757575;            /* Disabled text */
+    --gray-300: #888888;            /* Print gray/muted text */
+    --gray-200: #9e9e9e;            /* Disabled/optional states */
+    --muted-text-color: #b0b0b0;    /* Muted text */
+    --text-color: #e0e0e0;          /* Main text color */
+    --white: #ffffff;               /* Pure white */
+    
+    /* Semantic Colors */
+    --accent-color: #429eff;
+    --success-color: #4fbb40;
+    --warning-color: #eab308;
+    --error-color: #ef4444;
+    
+    /* Volume Tracking Colors */
+    --volume-addition: #4fbb40;
+    --volume-subtraction: #ef4444; 
+    --volume-subtotal: #429eff;
+    
+    /* Data Preview Badge Colors */
+    --badge-found: #096900;
+    --badge-beerxml: #983a00;
+    --badge-beerjson: #030069;
+    --badge-missing-required: #690012;
+    
+    /* Badge Text Colors */
+    --badge-found-text: #5bff5b;
+    --badge-beerxml-text: #ffcc4d;
+    --badge-beerjson-text: #4da6ff;
+    --badge-missing-required-text: #ff4d4d;
+    
+    /* Rainbow Animation Colors */
+    --rainbow-1: #ff0000;
+    --rainbow-2: #ff8c00;
+    --rainbow-3: #ffff00;
+    --rainbow-4: #00ff00;
+    --rainbow-5: #00ffff;
+    --rainbow-6: #0080ff;
+    --rainbow-7: #8000ff;
+    --rainbow-8: #ff00ff;
+    --rainbow-9: #ff0080;
+    
+    /* Overlay & Backdrop Colors */
+    --overlay-transparent: rgba(0, 0, 0, 0);
+    --overlay-light: rgba(0, 0, 0, 0.4);
+    --overlay-medium: rgba(0, 0, 0, 0.7);
+    --gradient-overlay: linear-gradient(to left, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
+    
+    /* Text Shadow Utilities */
+    --text-shadow-medium: 1px 1px 3px rgba(0, 0, 0, 0.7);
+    --text-shadow-strong: 2px 2px 4px rgba(0, 0, 0, 0.8);
+    
+    /* Functional Colors */
+    --hover-bg: color-mix(in srgb, var(--accent-color) 20%, transparent);
+    --shadow-color: rgba(0, 0, 0, 0.4);
+    --accent-glow-shadow: rgba(100, 74, 226, 0.4);
+
+    /* Spacing and Layout */
+    --max-width: 8.5in;
+    --border-radius: 4px;
+    --border-radius-sm: 3px;
+    --box-shadow: 0 2px 4px var(--shadow-color);
+    
+    /* Spacing System - Comprehensive Scale */
+    --spacing-3xs: 0.1rem;     /* 1.6px - very tiny adjustments */
+    --spacing-2xs: 0.125rem;   /* 2px - fine details */
+    --spacing-xs: 0.25rem;     /* 4px - tight spacing */
+    --spacing-sm: 0.5rem;      /* 8px - small spacing */
+    --spacing-md-sm: 0.75rem;  /* 12px - medium-small spacing */
+    --spacing-md: 1rem;        /* 16px - standard spacing */
+    --spacing-md-lg: 1.25rem;  /* 20px - medium-large spacing */
+    --spacing-lg: 1.5rem;      /* 24px - large spacing */
+    --spacing-xl: 2rem;        /* 32px - extra large spacing */
+    --spacing-xl-lg: 2.5rem;   /* 40px - button/component dimensions */
+    --spacing-2xl: 3rem;       /* 48px - section spacing */
+    --spacing-3xl: 3.75rem;    /* 60px - header height */
+    
+    /* Component-Specific Dimensions */
+    --header-height: 60px;
+    --floating-button-size: 40px;
+    --modal-max-width: 500px;
+    --container-max-width: 1200px;
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --heading-font-family: "gluten-variable", sans-serif;
+    --subheading-font-family: "grandstander-variable", sans-serif;
+    --body-font-family: "ivysoft-variable", sans-serif;
+    --base-font-size: 16px;
+    --base-line-height: 1.3;
+    
+    /* Z-Index Layer System */
+    --z-base: 1;                    /* Base content layer */
+    --z-content: 10;                /* Content overlays */
+    --z-controls: 100;              /* UI controls */
+    --z-navigation: 500;            /* Navigation elements */
+    --z-header: 1000;               /* App header */
+    --z-floating: 1500;             /* Floating buttons */
+    --z-loading: 2000;              /* Loading overlays */
+    --z-recipe-loader: 2500;        /* Recipe loading */
+    --z-modal: 3000;                /* Standard modals */
+    --z-dropdown: 5000;             /* Dropdowns and popovers */
+    --z-toast: 10000;               /* Toast notifications */
+    --z-tooltip: 15000;             /* Tooltips */
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: "ivysoft-variable", sans-serif;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--spacing-md);
+    background-color: var(--gray-900);
+    color: var(--text-color);
+    line-height: 1.3;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+}
+
+main {
+    padding-top: var(--header-height);
+}
+
+ul,
+ol {
+    list-style: none;
+}
+
+img,
+picture {
+    max-width: 100%;
+    display: block;
+}
+
+input,
+button,
+textarea,
+select {
+    font: inherit;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    font-family: "gluten-variable", sans-serif;
+    color: var(--text-color);
+    line-height: 1.1;
+    margin-bottom: 0.5em;
+}
+
+h1,
+h2 {
+    font-family: "gluten-variable", sans-serif;
+}
+
+h3,
+h4,
+h5,
+h6 {
+    font-family: "grandstander-variable", sans-serif;
+}
+
+h1 {
+    font-size: 3.3em;
+}
+
+h2 {
+    font-size: 1.7em;
+}
+
+h3 {
+    font-size: 1.1em;
+}
+
+h4 {
+    font-size: 1em;
+}
+
+h5 {
+    font-size: 0.85em;
+}
+
+h6 {
+    font-size: 0.7em;
+}
+
+p {
+    line-height: 1.3;
+    font-size: 0.8em;
+}
+
+.text-small {
+    font-size: 0.875rem;
+}
+
+.text-medium {
+    font-size: 1.1rem;
+}
+
+.text-semibold {
+    font-weight: 600;
+}
+
+.text-center {
+    text-align: center;
+}
+
+a {
+    color: var(--success-color);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+    color: color-mix(in srgb, var(--accent-color) 85%, black);
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.page {
+    display: block;
+}
+
+.page:not(.active) {
+    display: none;
+}
+
+#recipe-page {
+    display: none;
+}
+
+#recipe-page.active {
+    display: block;
+}
+
+/* === PRIVATE RECIPE OVERLAY === */
+
+.private-recipe-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--gray-900) 80%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.private-recipe-message {
+  background: var(--gray-600);
+  border: 1px solid var(--gray-400);
+  border-radius: 8px;
+  padding: var(--spacing-xl);
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+}
+
+.private-recipe-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.private-recipe-message h2 {
+  color: var(--text-color);
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.private-recipe-message p {
+  color: var(--muted-text-color);
+  margin: 0 0 var(--spacing-xl) 0;
+  line-height: 1.5;
+}
+
+.private-recipe-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: center;
+}
+
+.private-recipe-message .home-btn {
+  padding: var(--spacing-md-sm) var(--spacing-lg);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+  background: var(--gray-500);
+  color: white;
+}
+
+.private-recipe-message .home-btn:hover {
+  background: var(--gray-400);
+}
+
+/* OKLCH Color Support - Enhanced colors for modern browsers */
+@supports (color: oklch(50% 0.1 180)) {
+    :root {
+        /* Semantic Colors */
+        --accent-color: oklch(67% 0.18 254);
+        --success-color: oklch(67% 0.2 142);
+        --warning-color: oklch(67% 0.2 86);
+        --error-color: oklch(67% 0.2 27);
+
+        /* Volume Tracking Colors */
+        --volume-addition: oklch(65% 0.18 142);
+        --volume-subtraction: oklch(60% 0.18 27);
+        --volume-subtotal: oklch(60% 0.18 254);
+
+        /* Data Preview Badge Colors */
+        --badge-found: oklch(35% 0.120 142);
+        --badge-beerxml: oklch(35% 0.120 65);
+        --badge-beerjson: oklch(35% 0.120 254);
+        --badge-missing-required: oklch(35% 0.120 27);
+        
+        /* Dynamic Badge Text Colors */
+        --badge-found-text: oklch(from var(--badge-found) calc(l * 2.6) calc(c + 0.2) h);
+        --badge-beerxml-text: oklch(from var(--badge-beerxml) calc(l * 2.6) calc(c + 0.2) h);
+        --badge-beerjson-text: oklch(from var(--badge-beerjson) calc(l * 2.6) calc(c + 0.2) h);
+        --badge-missing-required-text: oklch(from var(--badge-missing-required) calc(l * 2.6) calc(c + 0.2) h);
+
+        /* Rainbow Animation Colors */
+        --rainbow-1: oklch(62.8% 0.218 27);
+        --rainbow-2: oklch(74.9% 0.150 65);
+        --rainbow-3: oklch(94.8% 0.206 103);
+        --rainbow-4: oklch(84.6% 0.294 142);
+        --rainbow-5: oklch(91.2% 0.139 195);
+        --rainbow-6: oklch(69.5% 0.156 252);
+        --rainbow-7: oklch(58.2% 0.183 307);
+        --rainbow-8: oklch(70.2% 0.204 328);
+        --rainbow-9: oklch(65.5% 0.211 8);
+        
+        /* Functional Colors */
+        --hover-bg: color-mix(in oklch, var(--accent-color) 20%, transparent);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

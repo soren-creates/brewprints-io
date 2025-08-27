@@ -1,0 +1,275 @@
+/* === PRINT STYLES === */
+@media print {
+  /* === UI ELEMENTS TO HIDE === */
+  .section-controls, .file-input-container, .app-header, .print-button, .back-button, .toast-notification, .loading-overlay, .image-controls, .image-upload-modal, .recipe-image-placeholder, #sectionControls, .upload-modal, .debug-toggle-btn, .debug-control-panel, .btn--debug, .btn--floating, .modal-base, .no-print { display: none !important; }
+  
+  .volume-tracking-warnings { display: none !important; }
+  
+  /* === GLOBAL LAYOUT ADJUSTMENTS === */
+  body { padding-top: 0; }
+  .recipe-image-display { cursor: default; }
+  .recipe-image-display:hover { transform: none; }
+  
+  body, html {
+    margin: 0;
+    padding: 0;
+    background-color: white !important;
+    color: black !important;
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+  
+  .recipe-container {
+    max-width: none;
+    margin: 0;
+    padding: 0.5in;
+    background-color: white !important;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  
+  /* Special print behavior: show sections marked as show-for-print even if hidden */
+  .section-hidden.show-for-print { display: block !important; }
+  
+  .recipe-section {
+    margin-bottom: 1rem;
+    background: white !important;
+    box-shadow: none;
+    page-break-inside: avoid;
+  }
+  
+  .ingredients-table th, .mash-table th {
+    background-color: var(--accent-color) !important;
+    color: white !important;
+  }
+  
+  .section-title, .stats-title, .recipe-title {
+    color: var(--accent-color) !important;
+    page-break-after: avoid;
+  }
+  
+  .recipe-title { font-size: 36pt !important; }
+  
+  .batch-number-field {
+    border-bottom: 1px solid var(--black) !important;
+    color: var(--black) !important;
+    padding-bottom: 20px !important;
+    margin-bottom: -3px !important;
+  }
+  
+  .date-field {
+    color: var(--black) !important;
+    font-weight: 600 !important;
+    font-size: 11pt !important;
+    border-bottom: 1px solid var(--black) !important;
+    padding-bottom: 2px !important;
+    margin: 0 auto !important;
+    display: block !important;
+    text-align: center !important;
+    letter-spacing: 0.1em !important;
+    width: 85px !important;
+    height: 1.32rem !important;
+    box-sizing: border-box !important;
+    background: transparent !important;
+  }
+  
+  .actual-measurement-field {
+    border-bottom: 1px solid var(--black) !important;
+    width: 70px !important;
+    height: 20px !important;
+    margin: 0 !important;
+    background: transparent !important;
+    color: var(--black) !important;
+  }
+  
+  /* Stats with ranges - print layout */
+  .stats-with-ranges {
+    margin-top: 0 !important;
+    padding: 0 !important;
+    page-break-inside: avoid;
+  }
+  
+  .stat-ranges {
+    display: block !important;
+    width: 100% !important;
+    page-break-inside: avoid;
+  }
+  
+  .stat-range {
+    display: block !important;
+    page-break-inside: avoid;
+    margin-bottom: 0.3rem !important;
+    width: 100% !important;
+  }
+  
+  .stat-range:last-child { margin-bottom: 0 !important; }
+  
+  .stat-range-row {
+    display: grid !important;
+    grid-template-columns: 2.4rem 1fr 4.4rem !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-height: 20px !important;
+    box-sizing: border-box !important;
+    gap: 0.5rem !important;
+  }
+  
+  .stat-range-label {
+    font-weight: bold !important;
+    color: black !important;
+    text-align: right !important;
+    font-size: 11pt !important;
+    line-height: 20px !important;
+    box-sizing: border-box !important;
+    grid-column: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    padding-right: 0 !important;
+    margin-right: 0 !important;
+  }
+  
+  .stat-range-bar {
+    background: white !important;
+    border: 1px solid black !important;
+    height: 20px !important;
+    min-height: 20px !important;
+    max-height: 20px !important;
+    width: 100% !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+    position: relative !important;
+    grid-column: 2 !important;
+  }
+  
+  .range-track { background: white !important; }
+  
+  .range-indicator {
+    background: black !important;
+    border: none !important;
+    box-shadow: none !important;
+    width: 2px !important;
+    height: 19px !important;
+    top: 0px !important;
+    border-radius: 0 !important;
+    position: absolute !important;
+    z-index: 10 !important;
+    box-sizing: border-box !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    transform: translateX(-50%) !important;
+  }
+  
+  .style-range-highlight {
+    opacity: 0.4 !important;
+    border-radius: 0 !important;
+    height: 18.5px !important;
+    min-height: 18.5px !important;
+    max-height: 18.5px !important;
+    position: absolute !important;
+    top: 0px !important;
+    box-sizing: border-box !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .stat-range .range-min-value,
+  .stat-range .range-max-value {
+    font-size: 6.5pt !important;
+    color: var(--gray-300) !important;
+    font-weight: bold !important;
+    line-height: 1 !important;
+    opacity: 1 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    top: -1px !important;
+    position: absolute !important;
+    white-space: nowrap !important;
+    z-index: 2 !important;
+  }
+  
+  .stat-range .range-min-value, .stat-range .range-max-value.max-value-left-aligned { transform: translateX(-100%) translateX(-4px) !important; }
+  .stat-range .range-min-value.min-value-right-aligned, .stat-range .range-max-value { transform: translateX(4px) !important; }
+  
+  .stat-range .range-recipe-value {
+    font-size: 9pt !important;
+    color: black !important;
+    font-weight: bold !important;
+    line-height: 1 !important;
+    bottom: 0px !important;
+    position: absolute !important;
+    white-space: nowrap !important;
+    z-index: 3 !important;
+  }
+  
+  .stat-range .range-recipe-value.recipe-value-left { transform: translateX(-100%) translateX(-6px) !important; }
+  .stat-range .range-recipe-value.recipe-value-right { transform: translateX(6px) !important; }
+  
+  /* Mash Tun Utilization Progress Bar print */
+  .mash-tun-utilization {
+    background: white !important;
+    margin-top: 2px !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .utilization-row { gap: 8px !important; }
+  
+  .utilization-label { 
+    font-weight: bold !important; 
+    color: black !important; 
+  }
+  
+  .progress-bar-container {
+    border: 1.5px solid black !important;
+    border-radius: 6px !important;
+    height: 12px !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+  
+  .progress-bar-background {
+    background: var(--white) !important;
+    border: none !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+  }
+  
+  .progress-bar-fill {
+    border-radius: 6px 0 0 6px !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+  
+  .mash-tun-utilization .progress-bar-fill.utilization-good { background: var(--success-color) !important; }
+  .mash-tun-utilization .progress-bar-fill.utilization-warning { background: var(--warning-color) !important; }
+  .mash-tun-utilization .progress-bar-fill.utilization-danger { background: var(--volume-subtraction) !important; }
+  
+  .progress-bar-marker { 
+    background: var(--black) !important; 
+    width: 2px !important; 
+    print-color-adjust: exact !important; 
+    -webkit-print-color-adjust: exact !important; 
+  }
+  
+  .utilization-percentage { 
+    font-weight: bold !important; 
+    color: black !important; 
+  }
+  
+  /* No-sparge print layout fixes */
+  .brew-day-measurements-columns-no-sparge {
+    height: auto !important;
+    column-count: 2 !important;
+    column-gap: 1rem !important;
+    column-fill: balance !important;
+    overflow: visible !important;
+  }
+  
+  .brew-day-measurements-columns-no-sparge .brew-day-measurements-subsection.column-break-before {
+    break-before: column !important;
+    page-break-before: avoid !important;
+  }
+
+  /* Page breaks */
+  .page-break-before { page-break-before: always !important; }
+  .page-break-after { page-break-after: always !important; }
+}

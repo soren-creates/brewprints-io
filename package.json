@@ -1,0 +1,30 @@
+{
+  "name": "brewprints-io",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A specialized web application for converting beer recipes to printable brewing logs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soren-creates/brewprints-io.git"
+  },
+  "keywords": [
+    "beer",
+    "brewing",
+    "homebrew",
+    "recipe",
+    "beerxml",
+    "beerjson",
+    "brewfather"
+  ],
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/soren-creates/brewprints-io/issues"
+  },
+  "homepage": "https://brewprints.io",
+  "scripts": {
+    "test": "node testing/test-runner.js",
+    "debug": "node testing/interactive-debug.js"
+  },
+  "devDependencies": {}
+}

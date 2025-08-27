@@ -1,0 +1,827 @@
+/* Recipe Display Styles */
+
+/* === TYPOGRAPHY UTILITIES === */
+.value-text-md {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-color);
+}
+
+.value-text-sm {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-color);
+  opacity: 0.7;
+}
+
+.name-value {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.time-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--success-color);
+  margin-top: calc(var(--spacing-2xs) * -1);
+}
+
+.use-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-color);
+}
+
+/* === LAYOUT === */
+#recipe-page { margin-top: var(--spacing-md); }
+
+.recipe-container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+  background: var(--gray-800);
+}
+
+.recipe-section {
+  margin-bottom: var(--spacing-md);
+  padding: 0;
+  break-inside: avoid;
+}
+
+/* User-controlled section visibility - hides sections from both view and print */
+.section-hidden { display: none !important; }
+
+/* === HEADERS === */
+.section-title, .stats-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--accent-color);
+  margin-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 2px solid var(--accent-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stats-title { margin: 0 0 var(--spacing-md) 0; }
+
+.section-title .actuals-label {
+  color: var(--muted-text-color);
+}
+
+.subsection-title {
+  font-size: 1rem;
+  font-weight: 600;
+  font-style: italic;
+  color: var(--text-color);
+  margin: 0 0 var(--spacing-xs) 0;
+  padding: 0;
+}
+
+/* === RECIPE HEADER === */
+.recipe-header {
+  border-bottom: 3px solid var(--accent-color);
+  margin-bottom: var(--spacing-xl);
+  text-align: center;
+}
+
+.recipe-title {
+  font-weight: 700;
+  color: var(--accent-color);
+  margin-bottom: var(--spacing-xs);
+  position: relative;
+  top: calc(var(--spacing-xs) * -1.5);
+  line-height: 0.8em;
+}
+
+.recipe-header-center {
+  display: grid;
+  grid-template-columns: 6fr 1fr;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-sm);
+  align-items: stretch;
+}
+
+.recipe-header-info { text-align: left; }
+
+.recipe-header-center .brewer {
+  margin-bottom: 0;
+  color: var(--text-color);
+}
+
+.recipe-header-center .style,
+.recipe-header-center .recipe-abv {
+  margin: var(--spacing-xs) 0 0 0;
+  font-size: 1.1rem;
+  color: var(--text-color);
+  font-style: italic;
+}
+
+.recipe-header-center .recipe-abv { margin: 0; }
+
+/* Brewfather indicator */
+.brewfather-indicator {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--accent-color);
+  border-radius: var(--border-radius);
+  text-align: center;
+}
+
+.brewfather-badge {
+  display: inline-block;
+  background: var(--accent-color);
+  color: var(--gray-800);
+  padding: var(--spacing-2xs) calc(var(--spacing-xs) * 1.5);
+  border-radius: var(--border-radius-sm);
+  font-size: var(--spacing-md-sm);
+  font-weight: 600;
+  margin-bottom: var(--spacing-2xs);
+}
+
+.brewfather-note {
+  display: block;
+  font-size: calc(var(--spacing-md-sm) - var(--spacing-3xs));
+  color: var(--muted-text-color);
+  font-style: italic;
+}
+
+/* === RECIPE STATS === */
+.recipe-meta {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: stretch;
+}
+
+.recipe-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: repeat(3, 1fr);
+  border-radius: var(--border-radius);
+  border: 1px solid var(--gray-400);
+  width: 215px;
+  flex-shrink: 0;
+  padding: var(--spacing-xs);
+  box-sizing: border-box;
+  align-content: space-between;
+}
+
+.stat {
+  text-align: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-color);
+  margin-bottom: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--accent-color);
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: calc(var(--spacing-sm) * -1);
+}
+
+/* === TABLES === */
+.ingredients-table, .mash-table, .volume-tracking-table, .efficiency-measurements-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 var(--spacing-md) 0;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  break-inside: avoid;
+}
+
+.fermentables-table, .hops-table { margin: 0; }
+
+.ingredients-table th, .mash-table th {
+  background: var(--accent-color);
+  color: white;
+  font-weight: 600;
+  padding: var(--spacing-md);
+  text-align: left;
+}
+
+.ingredients-table td {
+  padding: 0 var(--spacing-xs) var(--spacing-sm) var(--spacing-xs);
+}
+
+.ingredients-table tr:last-child td { padding-bottom: 0; }
+
+.mash-table td {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--gray-400);
+}
+
+/* === INGREDIENT FORMATTING === */
+.ingredient-amount {
+  width: 70px;
+  vertical-align: middle;
+  text-align: right;
+  font-weight: 600;
+  color: var(--accent-color);
+}
+
+.ingredient-percentage {
+  font-size: 12px;
+  width: 70px;
+  vertical-align: middle;
+  text-align: center;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.ingredient-use {
+  width: 70px;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.fermentables-table .ingredient-amount,
+.hops-table .ingredient-amount {
+  width: 90px;
+}
+
+.yeasts-table .temp-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-color);
+  margin-top: 2px;
+  width: max-content;
+}
+
+.ingredient-temp { text-align: center; }
+
+.ingredient-temp .temp-value {
+  display: inline-block;
+  margin: 0 auto;
+}
+
+/* === STEP FORMATTING (MASH & FERMENTATION) === */
+.mash-step-temp, .fermentation-step-temp {
+  width: 70px;
+  vertical-align: middle;
+  text-align: right;
+  font-weight: 600;
+  color: var(--accent-color);
+}
+
+.mash-step-name, .fermentation-step-name {
+  vertical-align: middle;
+  font-weight: 500;
+}
+
+.mash-step-time, .fermentation-step-time {
+  width: 80px;
+  vertical-align: middle;
+  text-align: center;
+}
+
+.mash-steps-table .name-value, .fermentation-steps-table .name-value {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.mash-steps-table .time-value, .fermentation-steps-table .time-value,
+.mash-steps-table .end-temp-value, .mash-steps-table .ramp-time-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--success-color);
+}
+
+.mash-steps-table .end-temp-value, .mash-steps-table .ramp-time-value {
+  color: var(--text-color);
+  margin-top: calc(var(--spacing-2xs) * -1);
+  opacity: 0.7;
+}
+
+/* === LAYOUT COLUMNS === */
+.ingredients-container, .mash-fermentation-container,
+.brew-day-measurements-columns, .water-volume-tracking-container,
+.water-profiles-container {
+  column-count: 2;
+  column-gap: var(--spacing-md);
+  column-fill: balance;
+  overflow: hidden;
+}
+
+/* No-sparge layout: CSS columns with height to control break point */
+.brew-day-measurements-columns-no-sparge {
+  column-count: 2;
+  column-gap: var(--spacing-md);
+  column-fill: balance;
+  height: auto;
+  overflow: visible;
+}
+
+/* Force Volume subsection to break to column 2 */
+.brew-day-measurements-columns-no-sparge .brew-day-measurements-subsection.column-break-before {
+  break-before: column;
+  page-break-before: avoid;
+  -webkit-column-break-before: always;
+}
+
+
+.ingredients-subsection, .mash-fermentation-subsection,
+.brew-day-measurements-subsection, .volume-tracking-subsection,
+.water-profiles-container .subsection {
+  margin: 0 0 var(--spacing-sm) 0;
+  padding: 0;
+  break-inside: avoid;
+  display: block;
+  page-break-inside: avoid;
+}
+
+/* === WATER PROFILES === */
+.water-profile-table {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.water-profile-row {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 var(--spacing-xs);
+}
+
+.water-profile-row.ion-symbols {
+  margin-bottom: var(--spacing-xs);
+}
+
+.water-profile-row.ion-values {
+  margin-top: 0;
+}
+
+.water-profile-row .name-value,
+.water-profile-row .value-text-md {
+  text-align: center;
+  flex: 1;
+}
+
+.column-break-before { 
+  break-before: column; 
+  page-break-before: always; 
+  -webkit-column-break-before: always; 
+}
+.water-chemistry-summary { break-inside: avoid; }
+
+/* === INGREDIENT SUMMARIES === */
+.ingredient-summary {
+  margin: var(--spacing-xs) 0 var(--spacing-md) 0;
+  padding: 0;
+  font-size: var(--spacing-md-sm);
+}
+
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.summary-line:last-child { margin-bottom: 0; }
+
+.summary-label {
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.summary-label.summary-right { text-align: right; }
+
+.summary-value {
+  font-weight: 600;
+  color: var(--accent-color);
+}
+
+.summary-value.summary-right { text-align: right; }
+
+/* === STATS WITH RANGES === */
+.stats-with-ranges {
+  flex: 1;
+  min-width: 0;
+  margin-top: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.stat-ranges {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  flex: 1;
+  justify-content: space-between;
+}
+
+.stat-range {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.stat-range-row {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--spacing-md-sm) + var(--spacing-3xs));
+}
+
+.stat-range-label {
+  font-weight: bold;
+  width: calc(var(--spacing-lg) * 1.6);
+  height: calc(var(--spacing-md) + var(--spacing-2xs));
+  color: var(--text-color);
+  flex-shrink: 0;
+  text-align: right;
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+.stat-range-value {
+  font-weight: bold;
+  color: var(--accent-color);
+}
+
+.stat-range-bar {
+  position: relative;
+  height: calc(var(--spacing-md) + var(--spacing-2xs));
+  background: var(--gray-400);
+  border-radius: calc(var(--spacing-sm) + var(--spacing-3xs));
+  overflow: visible;
+  flex: 1;
+  min-width: 200px;
+}
+
+.range-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--gray-500);
+  opacity: 0.8;
+  border-radius: calc(var(--spacing-sm) + var(--spacing-3xs));
+}
+
+.range-indicator {
+  position: absolute;
+  top: 0px;
+  width: 4px;
+  height: calc(var(--spacing-md) + var(--spacing-2xs));
+  background: var(--accent-color);
+  border-radius: 2px;
+  transform: translateX(-50%);
+  box-shadow: 0 1px 3px var(--shadow-color);
+  z-index: 3;
+}
+
+.stat-range.in-range .range-indicator { background: var(--success-color); }
+.stat-range.out-of-range .range-indicator { background: var(--error-color); }
+.stat-range.out-of-range .stat-range-value { color: var(--error-color); }
+
+.range-min-value, .range-max-value {
+  position: absolute;
+  font-size: 0.57rem;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 2;
+  top: -1px;
+  color: var(--text-color);
+  opacity: 0.8;
+}
+
+.range-min-value { transform: translateX(-100%) translateX(-4px); }
+.range-min-value.min-value-right-aligned { transform: translateX(4px); text-align: left; }
+.range-max-value { transform: translateX(4px); text-align: left; }
+.range-max-value.max-value-left-aligned { transform: translateX(-100%) translateX(-4px); text-align: right; }
+
+.range-recipe-value {
+  position: absolute;
+  font-size: calc(var(--spacing-md-sm) - var(--spacing-3xs));
+  font-weight: bold;
+  white-space: nowrap;
+  z-index: 2;
+  bottom: -3px;
+  color: var(--accent-color);
+}
+
+.range-recipe-value.recipe-value-left { transform: translateX(-100%) translateX(-6px); }
+.range-recipe-value.recipe-value-right { transform: translateX(6px); }
+.stat-range.in-range .range-recipe-value { color: var(--success-color); }
+.stat-range.out-of-range .range-recipe-value { color: var(--error-color); }
+
+.style-range-highlight {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: var(--accent-color);
+  opacity: 0.2;
+  z-index: 1;
+}
+
+.stat-range.in-range .style-range-highlight { background: var(--success-color); opacity: 0.2; }
+.stat-range.out-of-range .style-range-highlight { background: var(--warning-color); opacity: 0.2; }
+
+/* === EFFICIENCY MEASUREMENTS === */
+.efficiency-measurements-table td {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  vertical-align: middle;
+  border: none;
+}
+
+.efficiency-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-color);
+  text-align: left;
+  width: 45%;
+  padding-right: var(--spacing-sm);
+}
+
+.efficiency-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-color);
+  text-align: center;
+  width: 30%;
+  min-width: 60px;
+}
+
+.efficiency-actual {
+  width: 25%;
+  text-align: center;
+  padding-left: var(--spacing-sm);
+}
+
+.efficiency-actual .actual-measurement-field {
+  width: 100%;
+  max-width: 80px;
+  height: 1.32rem;
+  border: none;
+  border-bottom: 1px solid var(--accent-color);
+  background: transparent;
+  color: var(--text-color);
+  font-weight: 600;
+  font-size: 14px;
+  text-align: center;
+  padding-bottom: 2px;
+  box-sizing: border-box;
+  letter-spacing: 0.05em;
+}
+
+/* === VOLUME TRACKING === */
+.volume-tracking-table td {
+  padding: 0 0 var(--spacing-xs) 0;
+}
+
+.volume-tracking-table tr:last-child td {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.volume-label {
+  font-size: 12px;
+  color: var(--muted-text-color);
+  font-weight: 500;
+  padding-right: var(--spacing-sm);
+}
+
+.volume-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+  text-align: right;
+}
+
+.calculation-group {
+  background: transparent;
+  margin-bottom: var(--spacing-md);
+  border-radius: var(--border-radius);
+  page-break-inside: avoid;
+}
+
+.calculation-group.mash-capacity-with-tun { margin-bottom: 0; }
+
+.calculation-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.1rem 0rem 0.1rem var(--spacing-sm);
+  margin: var(--spacing-2xs) 0;
+  border-radius: var(--border-radius-sm);
+  font-size: calc(var(--spacing-md) - var(--spacing-3xs));
+}
+
+.calculation-row .volume-label {
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.calculation-row .volume-value {
+  color: var(--text-color);
+  font-weight: bold;
+  min-width: 80px;
+  text-align: right;
+}
+
+/* === VOLUME TRACKING COLOR CODING === */
+.calculation-row.base-value {
+  background: color-mix(in srgb, var(--gray-400) 10%, transparent);
+  border-left: 4px solid var(--gray-500);
+  font-weight: 600;
+}
+
+.calculation-row.base-value .volume-label,
+.calculation-row.base-value .volume-value { color: var(--muted-text-color); }
+
+.calculation-row.addition {
+  background: color-mix(in srgb, var(--volume-addition) 10%, transparent);
+  border-left: 4px solid var(--success-color);
+}
+
+.calculation-row.addition .volume-label,
+.calculation-row.addition .volume-value { color: var(--volume-addition); }
+
+.calculation-row.subtraction {
+  background: color-mix(in srgb, var(--volume-subtraction) 10%, transparent);
+  border-left: 4px solid var(--volume-subtraction);
+}
+
+.calculation-row.subtraction .volume-label,
+.calculation-row.subtraction .volume-value { color: var(--volume-subtraction); }
+
+.calculation-row.subtotal {
+  background: color-mix(in srgb, var(--volume-subtotal) 15%, transparent);
+  border-left: 4px solid var(--volume-subtotal);
+  font-weight: 700;
+}
+
+.calculation-row.subtotal .volume-label,
+.calculation-row.subtotal .volume-value { color: var(--volume-subtotal); }
+
+.calculation-row.free-space {
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.calculation-row.free-space .volume-label,
+.calculation-row.free-space .volume-value { color: var(--text-color); }
+
+.calculation-row.overfill-warning {
+  background: color-mix(in srgb, var(--warning-color) 20%, black);
+  color: var(--warning-color);
+  border-left: 4px solid var(--warning-color);
+  font-weight: 700;
+  font-size: 1rem;
+  margin: var(--spacing-xs) 0;
+}
+
+.calculation-row.overfill-warning .volume-label,
+.calculation-row.overfill-warning .volume-value { color: var(--warning-color); }
+
+.water-volume-tracking-container .calculation-row.calculated-value .volume-value {
+  color: var(--warning-color);
+}
+
+/* === VOLUME TRACKING WARNINGS AND NOTES === */
+.volume-tracking-warnings {
+  margin-bottom: var(--spacing-md);
+  padding: var(--spacing-sm);
+  background: color-mix(in srgb, var(--text-color) 5%, transparent);
+  border-radius: var(--border-radius);
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.warning-note, .info-note {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-sm);
+  font-size: 0.85rem;
+  text-align: center;
+  justify-content: center;
+}
+
+.warning-note {
+  background: color-mix(in srgb, var(--warning-color) 10%, transparent);
+  border-left: 3px solid var(--warning-color);
+}
+
+.info-note {
+  background: color-mix(in srgb, var(--accent-color) 10%, transparent);
+  border-left: 3px solid var(--accent-color);
+}
+
+.warning-icon, .info-icon {
+  margin-right: var(--spacing-xs);
+  font-size: 1rem;
+}
+
+.warning-text, .info-text {
+  color: var(--text-color);
+  flex: 1;
+}
+
+/* === MASH TUN UTILIZATION === */
+.mash-tun-utilization { margin-top: 2px; }
+
+.mash-tun-utilization.mash-capacity-utilization {
+  margin-bottom: var(--spacing-md);
+}
+
+.utilization-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 0.1rem 0rem 0.1rem var(--spacing-sm) !important;
+}
+
+.utilization-label {
+  font-size: 12px;
+  font-weight: bold;
+  white-space: nowrap;
+  min-width: 80px;
+}
+
+.progress-bar-container {
+  position: relative;
+  flex: 1;
+  height: 12px;
+  border: 1.5px solid black;
+  border-radius: 10px;
+}
+
+.utilization-percentage {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-color);
+  white-space: nowrap;
+  min-width: 40px;
+  text-align: right;
+}
+
+.progress-bar-background {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: color-mix(in srgb, var(--gray-400) 30%, transparent);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--success-color);
+  border-radius: 6px 0 0 6px;
+  position: relative;
+}
+
+.progress-bar-fill.utilization-good { background: var(--success-color) !important; }
+.progress-bar-fill.utilization-warning { background: var(--warning-color) !important; }
+.progress-bar-fill.utilization-danger { background: var(--volume-subtraction) !important; }
+
+.progress-bar-marker {
+  position: absolute;
+  top: 0;
+  width: 2px;
+  height: 100%;
+  background: var(--text-color);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* === RECIPE NOTES === */
+.recipe-notes {
+  margin-top: var(--spacing-md);
+  line-height: 1.6;
+}
+
+.recipe-notes p {
+  margin-bottom: var(--spacing-md);
+}
+
+.recipe-notes p:last-child {
+  margin-bottom: 0;
+}
+

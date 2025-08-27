@@ -1,0 +1,49 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$userId": {
+        ".read": "auth != null && auth.uid != null",
+        ".write": "auth != null && auth.uid != null",
+        "recipes": {
+          "$recipeId": {
+            ".read": "(auth != null && auth.uid != null && ($userId == auth.uid || data.child('isPublic').val() == true || data.child('privacy').val() == 'public' || data.child('privacy').val() == 'unlisted'))",
+            ".write": "auth != null && auth.uid != null",
+            "isPublic": {
+              ".validate": "newData.isBoolean()"
+            },
+            "privacy": {
+              ".validate": "newData.isString() && (newData.val() == 'public' || newData.val() == 'unlisted' || newData.val() == 'private')"
+            },
+            "owner": {
+              ".validate": "newData.isString() && newData.val() == $userId"
+            },
+            "ownerName": {
+              ".validate": "newData.isString()"
+            },
+            "_migrated": {
+              ".validate": "newData.isBoolean()"
+            },
+            "_migratedAt": {
+              ".validate": "newData.isNumber()"
+            }
+          }
+        }
+      }
+    },
+    "shareTokens": {
+      ".read": "auth != null && auth.uid != null",
+      "$tokenId": {
+        ".read": true,
+        ".write": "auth != null && auth.uid != null"
+      }
+    },
+    "shared": {
+      "$shareToken": {
+        ".read": true,
+        ".write": "auth != null"
+      }
+    }
+  }
+}

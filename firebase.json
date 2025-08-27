@@ -1,0 +1,27 @@
+{
+  "database": {
+    "rules": "database.rules.json"
+  },
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "scripts/**",
+      "package.json",
+      "README.md"
+    ],
+    "rewrites": [
+      {
+        "source": "**/*.!(js|css|png|jpg|jpeg|gif|svg|ico|json)",
+        "destination": "/index.html"
+      },
+      {
+        "source": "**/!(*.*)",
+        "destination": "/index.html"
+      }
+    ],
+    "predeploy": ["node scripts/deploy-public.js"]
+  }
+}

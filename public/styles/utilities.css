@@ -1,0 +1,37 @@
+/* === UTILITY CLASSES === */
+
+/* Display utilities */
+.u-hidden { display: none !important; }
+.u-block { display: block !important; }
+.u-flex { display: flex !important; }
+.u-inline-flex { display: inline-flex !important; }
+.u-grid { display: grid !important; }
+
+/* Text utilities */
+.u-text-center { text-align: center !important; }
+.u-font-bold { font-weight: 600 !important; }
+
+/* Interaction utilities */
+.u-cursor-pointer { cursor: pointer !important; }
+.u-cursor-not-allowed { cursor: not-allowed !important; }
+
+/* Visual utilities */
+.u-opacity-50 { opacity: 0.5 !important; }
+
+/* Print utilities */
+.u-print-hidden { display: none !important; }
+@media print {
+  .u-print-hidden.u-show-for-print { display: block !important; }
+}
+
+/* Body overflow control */
+.u-overflow-hidden { overflow: hidden !important; }
+
+/* Dynamic state utilities - for JavaScript show/hide patterns */
+/* Modal and overlay visibility classes - consolidated with components.css */
+.preview--visible { display: block !important; }
+.preview--hidden { display: none !important; }
+.tab--visible { display: block !important; }
+.tab--hidden { display: none !important; }
+
+/* Toast animation states - now defined with .toast-notification in components.css */

@@ -1,0 +1,844 @@
+{
+  "version": "1.0",
+  "recipes": [
+    {
+      "name": "Eddy Gourdo 2024",
+      "type": "all grain",
+      "author": "Kalsarikänni Brewing",
+      "batch_size": {
+        "unit": "l",
+        "value": 11.356235
+      },
+      "efficiency": {
+        "brewhouse": {
+          "unit": "percent",
+          "value": 63.1
+        },
+        "mash": {
+          "unit": "percent",
+          "value": 70
+        }
+      },
+      "ingredients": {
+        "fermentable_additions": [
+          {
+            "name": "Pale Malt, Maris Otter",
+            "type": "grain",
+            "amount": {
+              "unit": "kg",
+              "value": 1.133981
+            },
+            "yield": {
+              "fine_grind": {
+                "unit": "percent",
+                "value": 82.5
+              }
+            },
+            "color": {
+              "unit": "lovibond",
+              "value": 3
+            },
+            "timing": {
+              "use": "mash"
+            },
+            "origin": "United Kingdom",
+            "producer": "Thomas Fawcett",
+            "notes": "Premium base malt from the UK. Popular for many English styles of beer including ales, pale ales and bitters.",
+            "moisture": {
+              "unit": "percent",
+              "value": 3
+            },
+            "diastatic_power": {
+              "unit": "lintner",
+              "value": 120
+            },
+            "protein": {
+              "unit": "percent",
+              "value": 9.4
+            },
+            "max_in_batch": {
+              "unit": "percent",
+              "value": 100
+            },
+            "recommend_mash": true
+          },
+          {
+            "name": "Munich I",
+            "type": "grain",
+            "amount": {
+              "unit": "kg",
+              "value": 0.907185
+            },
+            "yield": {
+              "fine_grind": {
+                "unit": "percent",
+                "value": 82.3
+              }
+            },
+            "color": {
+              "unit": "lovibond",
+              "value": 7.614213
+            },
+            "timing": {
+              "use": "mash"
+            },
+            "origin": "Germany",
+            "producer": "Weyermann",
+            "notes": "Light Munich malt. May be used as a base for many German beer styles. Fest beers, bocks, ales. Enhances malty flavour and aroma",
+            "moisture": {
+              "unit": "percent",
+              "value": 4.5
+            },
+            "diastatic_power": {
+              "unit": "lintner",
+              "value": 50
+            },
+            "protein": {
+              "unit": "percent",
+              "value": 11
+            },
+            "max_in_batch": {
+              "unit": "percent",
+              "value": 100
+            },
+            "recommend_mash": true
+          },
+          {
+            "name": "Sparkling Amber",
+            "type": "dry extract",
+            "amount": {
+              "unit": "kg",
+              "value": 0.680388
+            },
+            "yield": {
+              "fine_grind": {
+                "unit": "percent",
+                "value": 97
+              }
+            },
+            "color": {
+              "unit": "lovibond",
+              "value": 10.5
+            },
+            "timing": {
+              "use": "mash"
+            },
+            "origin": "US",
+            "producer": "Briess",
+            "recommend_mash": true
+          },
+          {
+            "name": "Aromatic Munich Malt 20L",
+            "type": "grain",
+            "amount": {
+              "unit": "kg",
+              "value": 0.453592
+            },
+            "yield": {
+              "fine_grind": {
+                "unit": "percent",
+                "value": 77.97
+              }
+            },
+            "color": {
+              "unit": "lovibond",
+              "value": 26.3
+            },
+            "timing": {
+              "use": "mash"
+            },
+            "origin": "US",
+            "producer": "Briess",
+            "recommend_mash": true
+          },
+          {
+            "name": "Victory Malt (biscuit)",
+            "type": "grain",
+            "amount": {
+              "unit": "kg",
+              "value": 0.340194
+            },
+            "yield": {
+              "fine_grind": {
+                "unit": "percent",
+                "value": 73.64
+              }
+            },
+            "color": {
+              "unit": "lovibond",
+              "value": 37.2
+            },
+            "timing": {
+              "use": "mash"
+            },
+            "origin": "US",
+            "producer": "Briess",
+            "recommend_mash": true
+          },
+          {
+            "name": "Oats, Flaked",
+            "type": "grain",
+            "amount": {
+              "unit": "kg",
+              "value": 0.283495
+            },
+            "yield": {
+              "fine_grind": {
+                "unit": "percent",
+                "value": 85
+              }
+            },
+            "color": {
+              "unit": "lovibond",
+              "value": 1.4
+            },
+            "timing": {
+              "use": "mash"
+            },
+            "origin": "US",
+            "producer": "Briess",
+            "recommend_mash": true
+          },
+          {
+            "name": "British Crystal Malt 50-60L",
+            "type": "grain",
+            "amount": {
+              "unit": "kg",
+              "value": 0.226796
+            },
+            "yield": {
+              "fine_grind": {
+                "unit": "percent",
+                "value": 75
+              }
+            },
+            "color": {
+              "unit": "lovibond",
+              "value": 75
+            },
+            "timing": {
+              "use": "mash"
+            },
+            "origin": "UK",
+            "producer": "Bairds",
+            "recommend_mash": true
+          },
+          {
+            "name": "Special B",
+            "type": "grain",
+            "amount": {
+              "unit": "kg",
+              "value": 0.113398
+            },
+            "yield": {
+              "fine_grind": {
+                "unit": "percent",
+                "value": 65
+              }
+            },
+            "color": {
+              "unit": "lovibond",
+              "value": 147.5
+            },
+            "timing": {
+              "use": "mash"
+            },
+            "origin": "Belgium",
+            "producer": "Dingemans",
+            "recommend_mash": true
+          },
+          {
+            "name": "Chocolate Wheat",
+            "type": "grain",
+            "amount": {
+              "unit": "kg",
+              "value": 0.056699
+            },
+            "yield": {
+              "fine_grind": {
+                "unit": "percent",
+                "value": 75.74
+              }
+            },
+            "color": {
+              "unit": "lovibond",
+              "value": 507.614213
+            },
+            "timing": {
+              "use": "mash"
+            },
+            "origin": "Germany",
+            "producer": "Weyermann",
+            "notes": "Chocholate malt made with a wheat base. Adds aroma and color. Alts and dark wheat beers.",
+            "moisture": {
+              "unit": "percent",
+              "value": 3
+            },
+            "max_in_batch": {
+              "unit": "percent",
+              "value": 5
+            },
+            "recommend_mash": true
+          },
+          {
+            "name": "Smoked",
+            "type": "grain",
+            "amount": {
+              "unit": "kg",
+              "value": 0.056699
+            },
+            "yield": {
+              "fine_grind": {
+                "unit": "percent",
+                "value": 80
+              }
+            },
+            "color": {
+              "unit": "lovibond",
+              "value": 3.0456853
+            },
+            "timing": {
+              "use": "mash"
+            },
+            "origin": "Germany",
+            "producer": "BestMalz",
+            "notes": "BEST Smoked gives beer a typical smoky flavor similar to that in smoked ham. The quantity used will influence the intensity of the beech wood or whisky flavor. This malt can not only be used for beer but also for distillate production. It has high enzymatic activity.",
+            "recommend_mash": true
+          }
+        ],
+        "hop_additions": [
+          {
+            "name": "Hallertau Magnum",
+            "alpha_acid": {
+              "unit": "percent",
+              "value": 16.2
+            },
+            "amount": {
+              "unit": "g",
+              "value": 14.174762
+            },
+            "timing": {
+              "use": "boil",
+              "time": {
+                "unit": "min",
+                "value": 60
+              }
+            },
+            "origin": "Germany",
+            "form": "pellet"
+          },
+          {
+            "name": "Styrian Goldings",
+            "alpha_acid": {
+              "unit": "percent",
+              "value": 3.5
+            },
+            "amount": {
+              "unit": "g",
+              "value": 9.071847
+            },
+            "timing": {
+              "use": "boil",
+              "time": {
+                "unit": "min",
+                "value": 5
+              }
+            },
+            "origin": "Slovenia",
+            "form": "pellet"
+          }
+        ],
+        "culture_additions": [
+          {
+            "name": "Propper Starter",
+            "type": "ale",
+            "form": "liquid",
+            "amount": {
+              "unit": "each",
+              "value": 1
+            },
+            "producer": "Omega"
+          },
+          {
+            "name": "SafAle English Ale (cryo vial)",
+            "type": "ale",
+            "form": "liquid",
+            "amount": {
+              "unit": "each",
+              "value": 1
+            },
+            "producer": "Fermentis",
+            "product_id": "S-04",
+            "temperature_range": {
+              "minimum": {
+                "unit": "celsius",
+                "value": 15
+              },
+              "maximum": {
+                "unit": "celsius",
+                "value": 20
+              }
+            },
+            "attenuation_range": {
+              "minimum": {
+                "unit": "percent",
+                "value": 77
+              },
+              "maximum": {
+                "unit": "percent",
+                "value": 77
+              }
+            },
+            "flocculation": "medium"
+          }
+        ],
+        "miscellaneous_additions": [
+          {
+            "name": "Baking Soda (NaHCO3)",
+            "type": "water agent",
+            "amount": {
+              "unit": "g",
+              "value": 2.5
+            },
+            "timing": {
+              "use": "mash"
+            }
+          },
+          {
+            "name": "Calcium Chloride (CaCl2)",
+            "type": "water agent",
+            "amount": {
+              "unit": "g",
+              "value": 2
+            },
+            "timing": {
+              "use": "mash"
+            }
+          },
+          {
+            "name": "Canning Salt (NaCl)",
+            "type": "water agent",
+            "amount": {
+              "unit": "g",
+              "value": 0.4
+            },
+            "timing": {
+              "use": "mash"
+            }
+          },
+          {
+            "name": "Gypsum (CaSO4)",
+            "type": "water agent",
+            "amount": {
+              "unit": "g",
+              "value": 2
+            },
+            "timing": {
+              "use": "mash"
+            }
+          },
+          {
+            "name": "Light brown sugar",
+            "type": "flavor",
+            "amount": {
+              "unit": "oz",
+              "value": 4
+            },
+            "timing": {
+              "use": "boil",
+              "time": {
+                "unit": "min",
+                "value": 90
+              }
+            }
+          },
+          {
+            "name": "pumpkin puree, pre-roasted, in fine-mesh bag",
+            "type": "flavor",
+            "amount": {
+              "unit": "lb",
+              "value": 2
+            },
+            "timing": {
+              "use": "boil",
+              "time": {
+                "unit": "min",
+                "value": 90
+              }
+            }
+          },
+          {
+            "name": "Irish Moss",
+            "type": "fining",
+            "amount": {
+              "unit": "tsp",
+              "value": 1
+            },
+            "timing": {
+              "use": "boil",
+              "time": {
+                "unit": "min",
+                "value": 15
+              }
+            }
+          },
+          {
+            "name": "Allspice, ground",
+            "type": "spice",
+            "amount": {
+              "unit": "tsp",
+              "value": 1
+            },
+            "timing": {
+              "use": "boil",
+              "time": {
+                "unit": "min",
+                "value": 5
+              }
+            }
+          },
+          {
+            "name": "Ginger, ground",
+            "type": "spice",
+            "amount": {
+              "unit": "tsp",
+              "value": 0.5
+            },
+            "timing": {
+              "use": "boil",
+              "time": {
+                "unit": "min",
+                "value": 5
+              }
+            }
+          },
+          {
+            "name": "Nutmeg, ground",
+            "type": "spice",
+            "amount": {
+              "unit": "tsp",
+              "value": 0.25
+            },
+            "timing": {
+              "use": "boil",
+              "time": {
+                "unit": "min",
+                "value": 5
+              }
+            }
+          },
+          {
+            "name": "Saigon cinnamon",
+            "type": "spice",
+            "amount": {
+              "unit": "tsp",
+              "value": 0.25
+            },
+            "timing": {
+              "use": "boil",
+              "time": {
+                "unit": "min",
+                "value": 5
+              }
+            }
+          },
+          {
+            "name": "Vanilla extract",
+            "type": "spice",
+            "amount": {
+              "unit": "tsp",
+              "value": 1
+            },
+            "timing": {
+              "use": "boil",
+              "time": {
+                "unit": "min",
+                "value": 5
+              }
+            }
+          }
+        ],
+        "water_additions": [
+          {
+            "name": "Seattle - Cedar River Watershed (Q4, 2021)",
+            "calcium": {
+              "unit": "ppm",
+              "value": 8
+            },
+            "bicarbonate": {
+              "unit": "ppm",
+              "value": 27
+            },
+            "sulfate": {
+              "unit": "ppm",
+              "value": 0
+            },
+            "chloride": {
+              "unit": "ppm",
+              "value": 1
+            },
+            "sodium": {
+              "unit": "ppm",
+              "value": 2
+            },
+            "magnesium": {
+              "unit": "ppm",
+              "value": 1
+            },
+            "ph": {
+              "unit": "pH",
+              "value": 8.1
+            }
+          },
+          {
+            "name": "Seattle - Cedar River Watershed (Q4, 2021)",
+            "calcium": {
+              "unit": "ppm",
+              "value": 63.145
+            },
+            "bicarbonate": {
+              "unit": "ppm",
+              "value": 123.904
+            },
+            "sulfate": {
+              "unit": "ppm",
+              "value": 60.851
+            },
+            "chloride": {
+              "unit": "ppm",
+              "value": 66.861
+            },
+            "sodium": {
+              "unit": "ppm",
+              "value": 47.914
+            },
+            "magnesium": {
+              "unit": "ppm",
+              "value": 1
+            },
+            "ph": {
+              "unit": "pH",
+              "value": 8.1
+            }
+          },
+          {
+            "name": "Balanced",
+            "calcium": {
+              "unit": "ppm",
+              "value": 50
+            },
+            "bicarbonate": {
+              "unit": "ppm",
+              "value": 36
+            },
+            "sulfate": {
+              "unit": "ppm",
+              "value": 70
+            },
+            "chloride": {
+              "unit": "ppm",
+              "value": 70
+            },
+            "sodium": {
+              "unit": "ppm",
+              "value": 16
+            },
+            "magnesium": {
+              "unit": "ppm",
+              "value": 10
+            }
+          },
+          {
+            "name": "Seattle - Cedar River Watershed (Q4, 2021)",
+            "calcium": {
+              "unit": "ppm",
+              "value": 63.145
+            },
+            "bicarbonate": {
+              "unit": "ppm",
+              "value": 123.904
+            },
+            "sulfate": {
+              "unit": "ppm",
+              "value": 60.851
+            },
+            "chloride": {
+              "unit": "ppm",
+              "value": 66.861
+            },
+            "sodium": {
+              "unit": "ppm",
+              "value": 47.914
+            },
+            "magnesium": {
+              "unit": "ppm",
+              "value": 1
+            },
+            "ph": {
+              "unit": "pH",
+              "value": 8.1
+            }
+          }
+        ]
+      },
+      "notes": "Yeast starter prepared a day in advance using a can of Propper Starter.\n\nAfter mashout, sparkling amber DME combined with 1L of ~170F temperature wort. Once dissolved, returned to brew kettle.\n\nPumpkin puree, sprinkled with saigon cinnamon and covered with ~1/2 cup light brown sugar. Roasted on middle rack in oven at 325F for 120 minutes. Cooled. Added to boil @ 90 min, in a fine-mesh bag.\n\nAllspice, ginger, nutmeg, cinnamon and vanilla extract combined with 2 oz hot water to form a tincture, added to boil @ 5 min.",
+      "boil": {
+        "name": "Boil",
+        "boil_time": {
+          "unit": "min",
+          "value": 90
+        },
+        "pre_boil_size": {
+          "unit": "l",
+          "value": 15.97
+        }
+      },
+      "mash": {
+        "name": "More dextrinous",
+        "grain_temperature": {
+          "unit": "celsius",
+          "value": 20
+        },
+        "mash_steps": [
+          {
+            "name": "B-amylase",
+            "type": "temperature",
+            "step_temperature": {
+              "unit": "celsius",
+              "value": 66.666667
+            },
+            "step_time": {
+              "unit": "min",
+              "value": 45
+            }
+          },
+          {
+            "name": "A-amylase",
+            "type": "temperature",
+            "step_temperature": {
+              "unit": "celsius",
+              "value": 70
+            },
+            "step_time": {
+              "unit": "min",
+              "value": 50
+            }
+          },
+          {
+            "name": "Mashout",
+            "type": "temperature",
+            "step_temperature": {
+              "unit": "celsius",
+              "value": 75
+            },
+            "step_time": {
+              "unit": "min",
+              "value": 10
+            }
+          }
+        ]
+      },
+      "fermentation": {
+        "name": "Ale",
+        "fermentation_steps": [
+          {
+            "name": "Primary",
+            "step_temperature": {
+              "unit": "celsius",
+              "value": 20
+            },
+            "step_time": {
+              "unit": "day",
+              "value": 14
+            }
+          }
+        ]
+      },
+      "style": {
+        "name": "Autumn Seasonal Beer",
+        "category": "Spiced Beer",
+        "category_number": "30",
+        "style_letter": "B",
+        "style_guide": "BJCP 2021",
+        "type": "Specialty Beer"
+      },
+      "original_gravity": {
+        "unit": "sg",
+        "value": 1.08139335
+      },
+      "final_gravity": {
+        "unit": "sg",
+        "value": 1.02
+      },
+      "alcohol_by_volume": {
+        "unit": "percent",
+        "value": 8.59
+      },
+      "ibu_estimate": {
+        "method": "Tinseth"
+      },
+      "color_estimate": {
+        "unit": "srm",
+        "value": 24.7
+      },
+      "carbonation": 2.2,
+      "apparent_attenuation": {
+        "unit": "percent",
+        "value": 74
+      },
+      "created": "2024-10-06"
+    }
+  ],
+  "equipments": [
+    {
+      "name": "Anvil Foundry  6.5 120V, 3 gal, No Sparge",
+      "equipment_items": [
+        {
+          "name": "Mash Tun",
+          "form": "Mash Tun",
+          "maximum_volume": {
+            "unit": "l",
+            "value": 24.605177
+          },
+          "loss": {
+            "unit": "l",
+            "value": 0
+          },
+          "grain_absorption_rate": {
+            "unit": "l/kg",
+            "value": 0.84
+          },
+          "notes": "Dead space (below false bottom): 4.163953 L"
+        },
+        {
+          "name": "Brew Kettle",
+          "form": "Brew Kettle",
+          "maximum_volume": {
+            "unit": "l",
+            "value": 28.76913
+          },
+          "loss": {
+            "unit": "l",
+            "value": 1.249186
+          },
+          "boil_rate_per_hour": {
+            "unit": "l",
+            "value": 1.892706
+          }
+        },
+        {
+          "name": "Fermenter",
+          "form": "Fermenter",
+          "maximum_volume": {
+            "unit": "l",
+            "value": 11.356235
+          },
+          "loss": {
+            "unit": "l",
+            "value": 0
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,972 @@
+/* === BUTTON SYSTEM === */
+/* Base button class - ALL buttons inherit this */
+.btn {
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  outline: none;
+  user-select: none;
+  padding: var(--spacing-sm) var(--spacing-md);
+  transition: all 0.2s ease;
+  /* Default to secondary style */
+  background: var(--gray-500);
+  color: var(--text-color);
+  border: 1px solid var(--gray-400);
+}
+
+.btn:hover {
+  background: var(--gray-400);
+  color: white;
+  border-color: var(--gray-400);
+}
+
+/* Color variant modifiers - consolidated hover pattern */
+.btn--primary {
+  background: var(--accent-color);
+  color: white;
+  box-shadow: var(--box-shadow);
+  border: none;
+}
+
+.btn--success {
+  background: var(--success-color);
+  color: white;
+  border: none;
+}
+
+.btn--danger {
+  background: var(--error-color);
+  color: white;
+  border: none;
+}
+
+.btn--warning {
+  background: var(--warning-color);
+  color: white;
+  border: none;
+}
+
+.btn--info {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+}
+
+/* Consolidated hover effects for colored buttons */
+.btn--primary:hover { background: color-mix(in srgb, var(--accent-color) 85%, black); }
+.btn--success:hover { background: color-mix(in srgb, var(--success-color) 85%, black); }
+.btn--danger:hover { background: color-mix(in srgb, var(--error-color) 85%, black); }
+.btn--warning:hover { background: color-mix(in srgb, var(--warning-color) 85%, black); }
+.btn--info:hover { background: color-mix(in srgb, var(--accent-color) 85%, black); }
+
+/* Size modifiers */
+.btn--small { padding: var(--spacing-xs) var(--spacing-sm); font-size: 0.875rem; }
+.btn--tiny { padding: var(--spacing-xs) var(--spacing-xs); font-size: 0.75rem; min-height: auto; }
+.btn--large { padding: var(--spacing-md) var(--spacing-xl); font-size: 1.1rem; font-weight: 600; }
+
+/* Layout modifiers */
+.btn--icon { padding: var(--spacing-xs); aspect-ratio: 1; min-width: calc(var(--spacing-xl-lg) - var(--spacing-xs)); }
+.btn--full { width: 100%; }
+.btn--fixed { width: 140px; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Floating button base - shared positioning logic */
+.btn--floating {
+  position: fixed;
+  border-radius: 50%;
+  width: var(--floating-button-size);
+  height: var(--floating-button-size);
+  padding: 0;
+  box-shadow: 0 2px 8px var(--shadow-color);
+  z-index: var(--z-controls);
+}
+
+.btn--floating:hover { transform: scale(1.1); }
+
+/* Floating position variants */
+.btn--floating.btn--upload,
+.btn--floating.btn--close { top: calc(var(--header-height) + var(--spacing-2xl) + var(--spacing-2xs)); right: calc(var(--spacing-2xl) + var(--spacing-2xs)); }
+.btn--floating.btn--debug { bottom: var(--spacing-md-lg); left: var(--spacing-md-lg); }
+
+/* Context-specific button modifiers */
+
+/* Recipe card buttons - shared dimensions */
+.btn--share-card,
+.btn--delete-card {
+  padding: var(--spacing-xs);
+  font-size: 0.9rem;
+  min-width: 1.8rem;
+  height: 1.8rem;
+}
+
+.btn--share-card {
+  background: color-mix(in srgb, var(--accent-color) 30%, black) !important;
+  color: white !important;
+  border: 1px solid var(--accent-color) !important;
+}
+
+.btn--share-card:hover {
+  background: color-mix(in srgb, var(--accent-color) 50%, black) !important;
+  border-color: color-mix(in srgb, var(--accent-color) 120%, white) !important;
+}
+
+.btn--delete-card {
+  background: var(--gray-800) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--gray-400) !important;
+}
+
+.btn--delete-card:hover {
+  background: color-mix(in srgb, var(--error-color) 50%, black) !important;
+  border-color: color-mix(in srgb, var(--error-color) 80%, white) !important;
+}
+
+/* Debug button state management */
+.btn--debug {
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
+}
+
+.btn--debug:hover { opacity: 0.9; }
+.btn--debug.active {
+  opacity: 1.0;
+  border-color: var(--accent-color);
+  box-shadow: 0 2px 8px var(--hover-bg);
+}
+
+/* Disabled state for all buttons */
+.btn:disabled,
+.btn[disabled] {
+  background: var(--gray-500) !important;
+  color: var(--muted-text-color) !important;
+  cursor: not-allowed;
+  border-color: var(--gray-400) !important;
+  opacity: 0.6;
+}
+
+
+
+
+.app-header { position: fixed; top: 0; left: 0; right: 0; height: var(--header-height); background: var(--gray-800); border-bottom: 1px solid var(--gray-400); box-shadow: var(--box-shadow); display: flex; justify-content: space-between; align-items: center; padding: 0 var(--spacing-md); z-index: var(--z-header); }
+.header-left, .header-right { display: flex; align-items: center; }
+.header-right { gap: var(--spacing-sm); }
+.app-title { color: var(--accent-color); font-weight: 600; font-size: 1.1rem; }
+.header-logo { height: var(--floating-button-size); width: auto; display: block; }
+
+/* User Dropdown Styles */
+.user-dropdown { position: relative; margin-left: var(--spacing-md); }
+.user-dropdown-btn { 
+  width: calc(var(--floating-button-size) - var(--spacing-xs)); 
+  height: calc(var(--floating-button-size) - var(--spacing-xs)); 
+  border-radius: 50%; 
+  background: var(--gray-500); 
+  border: 1px solid var(--gray-400); 
+  cursor: pointer; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  padding: 0;
+  overflow: hidden;
+}
+.user-dropdown-btn:hover { background: var(--gray-400); }
+.user-avatar { font-size: 1.2rem; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.user-dropdown-menu {
+  position: absolute;
+  top: calc(100% + var(--spacing-sm));
+  right: 0;
+  background: var(--gray-800);
+  border: 1px solid var(--gray-400);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px var(--shadow-color);
+  min-width: 180px;
+  z-index: var(--z-floating);
+}
+.dropdown-menu-item {
+  display: block;
+  width: 100%;
+  padding: var(--spacing-md-sm) var(--spacing-md);
+  background: transparent;
+  border: none;
+  color: var(--text-color);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+.dropdown-menu-item:hover { background: var(--gray-500); }
+.dropdown-menu-item:not(:last-child) { border-bottom: 1px solid var(--gray-500); }
+
+/* === FLOATING BUTTONS === */
+
+/* Print button styling */
+
+/* Fixed width buttons for consistent layout */
+.fixed-width-button {
+  width: 140px;
+  max-width: 140px;
+  min-width: 140px;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body { padding-top: var(--header-height); }
+.top-actions, #recipe-page > .print-button, #recipe-page > .back-button { display: none !important; }
+input, textarea, select { background: var(--gray-800); border: 1px solid var(--gray-400); border-radius: var(--border-radius); padding: var(--spacing-sm); color: var(--text-color); }
+input:focus, textarea:focus, select:focus { border-color: var(--accent-color); box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-color) 20%, transparent); }
+.batch-number-field, .date-field { color: var(--text-color) !important; font-weight: 600 !important; font-size: 1.1rem !important; border: none; border-bottom: 1px solid var(--accent-color); background: transparent; text-align: center; letter-spacing: 0.1em; height: 1.32rem; box-sizing: border-box; }
+.batch-number-field { width: 50px; }
+.date-field { width: 85px; }
+.actual-measurement-field { display: inline-block; width: 80px; height: 18px; border: none; border-bottom: 1px solid var(--accent-color); background: transparent; vertical-align: middle; }
+.upload-container { max-width: 600px; margin: 0 auto; padding: var(--spacing-md); }
+.upload-header { text-align: center; margin-bottom: var(--spacing-lg); }
+.upload-header h1 { color: var(--accent-color); margin-bottom: var(--spacing-sm); }
+.upload-header .app-logo { max-width: 100%; height: auto; display: inline-block; width: 520px; }
+.upload-header p { color: var(--text-color); font-size: 1.1rem; opacity: 0.8; }
+.upload-area { position: relative; }
+.file-input-container, .upload-zone { text-align: center; padding: var(--spacing-lg); border: 2px dashed var(--gray-400); border-radius: var(--border-radius); background: var(--gray-600); cursor: pointer; }
+.upload-zone { min-height: 200px; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: var(--box-shadow); }
+.file-input-container:hover, .upload-zone:hover { border-color: var(--accent-color); background-color: color-mix(in srgb, var(--accent-color) 5%, var(--gray-600)); }
+.upload-zone.drag_over, .upload-zone.drag-over { border-color: var(--success-color); background: color-mix(in srgb, var(--success-color) 10%, var(--gray-600)); border-style: solid; }
+.file-input { display: none; }
+.upload-icon { font-size: var(--spacing-xl); margin-bottom: var(--spacing-sm); opacity: 0.6; }
+.upload-content { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-xs); pointer-events: none; }
+
+/* === MODAL & OVERLAY SYSTEM === */
+/* Base overlay for all modal-like components */
+/* Base modal and overlay system */
+.modal-base {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+}
+
+/* Modal types */
+.modal-base.modal-standard {
+  background: var(--overlay-medium);
+  z-index: var(--z-modal);
+}
+
+.modal-base.modal-loading {
+  background: var(--overlay-light);
+  z-index: var(--z-loading);
+}
+
+.modal-base.modal-recipe-loader {
+  background: var(--overlay-medium);
+  z-index: var(--z-recipe-loader);
+  flex-direction: column;
+}
+
+/* Legacy modal classes - use .modal-base instead */
+.image-upload-modal, .duplicate-recipe-modal, .upload-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+  background: var(--overlay-medium);
+  z-index: var(--z-modal);
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+  background: var(--overlay-light);
+  z-index: var(--z-loading);
+}
+
+.recipe-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(3px);
+  background: var(--overlay-medium);
+  z-index: var(--z-recipe-loader);
+  flex-direction: column;
+}
+
+/* Modal visibility states */
+.modal-visible, .modal--visible { display: flex !important; }
+.modal-hidden, .modal--hidden { display: none !important; }
+.modal-content { background: var(--gray-800); border-radius: var(--border-radius); max-width: var(--modal-max-width); width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 var(--spacing-sm) var(--spacing-xl) var(--shadow-color); border: 1px solid var(--gray-400); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-md) var(--spacing-lg); border-bottom: 1px solid var(--gray-400); background: var(--gray-700); border-radius: var(--border-radius) var(--border-radius) 0 0; }
+.modal-header h3 { margin: 0; color: var(--accent-color); font-size: 1.2rem; font-weight: 600; }
+.modal-title { margin: 0; color: var(--accent-color); font-size: 1.2rem; font-weight: 600; }
+.modal-body { padding: var(--spacing-md); }
+.modal-close { background: none; border: none; font-size: var(--spacing-lg); cursor: pointer; color: var(--text-color); padding: 0; width: calc(var(--spacing-xl) - var(--spacing-2xs)); height: calc(var(--spacing-xl) - var(--spacing-2xs)); display: flex; align-items: center; justify-content: center; border-radius: 50%; }
+
+.modal-close:hover { background: color-mix(in srgb, var(--gray-400) 30%, transparent); }
+.loading-spinner { width: var(--floating-button-size); height: var(--floating-button-size); border: var(--spacing-xs) solid var(--gray-400); border-top-color: var(--accent-color); border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Recipe Loader Component */
+.recipe-loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--overlay-medium);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-recipe-loader);
+  backdrop-filter: blur(3px);
+}
+
+.recipe-loader .loading-spinner {
+  margin-bottom: var(--spacing-md);
+}
+
+.recipe-loader .loading-message {
+  color: var(--text-color);
+  font-size: var(--spacing-md);
+  font-weight: 500;
+  text-align: center;
+  max-width: 300px;
+  line-height: 1.4;
+}
+
+/* Modal Extensions */
+/* Duplicate recipe modal - uses base modal structure */
+.duplicate-recipe-modal .modal-content { position: relative; z-index: 1; padding: var(--spacing-xl); }
+.duplicate-recipe-modal h3 { color: var(--accent-color); margin: 0 0 var(--spacing-md) 0; font-size: 1.2rem; }
+.duplicate-recipe-modal p { color: var(--text-color); margin: 0 0 var(--spacing-lg) 0; line-height: 1.5; }
+.modal-buttons { display: flex; gap: var(--spacing-md); flex-wrap: wrap; }
+.modal-buttons button { flex: 1; min-width: 140px; padding: var(--spacing-md-sm) var(--spacing-md); border: none; border-radius: var(--border-radius); font-size: 0.95rem; cursor: pointer; transition: all 0.2s ease; }
+
+/* Image Upload Modal Specific Styles */
+.image-upload-modal .modal-body {
+  height: 610px;
+  display: flex;
+  flex-direction: column;
+}
+
+.image-upload-modal .tab-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* Ensure inactive tabs are hidden */
+.image-upload-modal .tab-content.u-hidden {
+  display: none !important;
+}
+
+.image-upload-modal .image-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  justify-content: flex-start;
+  padding-top: 1rem;
+}
+
+/* Ensure image preview is hidden when inactive */
+.image-upload-modal .image-preview.u-hidden {
+  display: none !important;
+}
+
+.image-upload-modal #preview-image {
+  max-width: 100%;
+  max-height: 400px;
+  padding: 10px;
+  border-radius: 4px;
+  object-fit: contain;
+  margin: 0 auto;
+  display: block;
+}
+
+.image-upload-modal .preview-controls {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+
+.image-upload-modal .upload-zone {
+  margin-top: 1rem;
+}
+
+.image-upload-modal #image-file-input {
+  width: 100%;
+}
+
+.image-upload-modal .url-input-group {
+  width: 100%;
+  margin-top: 0.5rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.image-upload-modal #image-url-input {
+  flex: 1;
+}
+
+.recipe-privacy-status {
+  display: flex;
+  align-items: center;
+}
+
+/* Upload Modal */
+.upload-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--overlay-medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  backdrop-filter: blur(3px);
+}
+
+.upload-modal-content {
+  background: var(--gray-800);
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px var(--shadow-color);
+  border: 1px solid var(--gray-400);
+}
+
+.upload-modal .modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--gray-400);
+  background: var(--gray-800);
+  border-radius: 8px 8px 0 0;
+}
+
+.upload-modal .modal-header h3 {
+  margin: 0;
+  color: var(--accent-color);
+  font-size: 1.2rem;
+}
+
+.upload-modal .modal-body {
+  padding: 1.5rem;
+}
+
+.upload-modal .upload-area {
+  text-align: center;
+}
+
+.upload-modal .upload-zone {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  border: 2px dashed var(--gray-400);
+  border-radius: 8px;
+  background: var(--gray-600);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.upload-modal .upload-zone:hover {
+  border-color: var(--accent-color);
+  background-color: color-mix(in srgb, var(--accent-color) 5%, var(--gray-600));
+}
+
+.upload-modal .upload-zone.drag-over {
+  border-color: var(--success-color);
+  background: color-mix(in srgb, var(--success-color) 10%, var(--gray-600));
+  border-style: solid;
+}
+
+.upload-modal .upload-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  opacity: 0.6;
+}
+
+.upload-modal .upload-zone h3 {
+  color: var(--text-color);
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+}
+
+.upload-modal .upload-zone p {
+  color: var(--muted-text-color);
+  margin: 0.25rem 0;
+}
+
+.upload-modal .format-support {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-bottom: 1.5rem !important;
+}
+
+.upload-zone .format-support {
+  margin-bottom: 1.5rem !important;
+}
+
+.upload-modal .upload-button {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 1rem;
+}
+
+.upload-modal .upload-button:hover {
+  background: color-mix(in srgb, var(--accent-color) 85%, black);
+  transform: translateY(-1px);
+}
+.debug-category-disabled { opacity: 0.5; cursor: not-allowed; }
+.debug-category-disabled input[type="checkbox"] { cursor: not-allowed; pointer-events: none; }
+.debug-category-disabled span { cursor: not-allowed; opacity: 0.6; }
+/* Toast Notification System */
+.toast-notification {
+  position: fixed;
+  bottom: var(--spacing-xl);
+  right: var(--spacing-xl);
+  min-width: 250px;
+  max-width: 400px;
+  background: var(--accent-color);
+  color: white;
+  padding: var(--spacing-md) calc(var(--spacing-lg) + 30px) var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: var(--z-toast);
+  opacity: 0;
+  transform: translateX(100%);
+  transition: all 0.3s ease;
+  word-wrap: break-word;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.toast-notification.toast--visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.toast-notification.toast--hidden {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+/* Toast type variants */
+.toast-notification.toast-success {
+  background: var(--success-color);
+}
+
+.toast-notification.toast-error {
+  background: var(--error-color);
+}
+
+.toast-notification.toast-warning {
+  background: var(--warning-color);
+}
+
+.toast-notification.toast-info {
+  background: var(--accent-color);
+}
+
+/* Toast close button */
+.toast-close {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+}
+
+.toast-close:hover {
+  opacity: 1;
+  background: color-mix(in srgb, white 20%, transparent);
+}
+
+/* Slide-in animation */
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Legacy .error-message class - DEPRECATED
+   Use .toast-notification classes instead */
+.section-controls { position: fixed; top: 80px; right: var(--spacing-md); background: var(--gray-800); border: 1px solid var(--gray-400); border-radius: var(--border-radius); padding: var(--spacing-lg); box-shadow: var(--box-shadow); max-width: 300px; width: 320px; z-index: var(--z-navigation); display: none; }
+#sectionControls { margin-bottom: 1.5rem; }
+.section-controls h3 { margin: 0 0 var(--spacing-md) 0; font-size: 1.1rem; color: var(--accent-color); border-bottom: 1px solid var(--gray-400); padding-bottom: var(--spacing-sm); }
+.section-controls-collapsible-header { cursor: pointer; margin-bottom: 0; border-radius: 4px; padding: 0.5rem; user-select: none; }
+.section-controls-collapsible-header:hover { background-color: var(--hover-bg); }
+.section-controls-content { max-height: 500px; overflow: hidden; transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+.section-controls-content.collapsed { max-height: 0; }
+.section-toggles { margin-bottom: 0.5rem; margin-top: 0.5rem; }
+.section-toggle { display: flex; align-items: center; margin-bottom: 0.25rem; padding: 0 0.5rem; cursor: pointer; border-radius: 4px; transition: background-color 0.2s ease; }
+.section-toggle:hover { background-color: var(--hover-bg); }
+.section-toggle input[type="checkbox"] { margin-right: var(--spacing-sm); cursor: pointer; accent-color: var(--accent-color); }
+.toggle-label { font-size: 0.9rem; cursor: pointer; user-select: none; }
+.section-toggle.disabled-toggle { opacity: 0.5; cursor: not-allowed; }
+.section-toggle.disabled-toggle:hover { background-color: transparent; }
+.section-toggle.disabled-toggle input[type="checkbox"] { cursor: not-allowed; }
+.section-toggle.disabled-toggle .toggle-label { cursor: not-allowed; opacity: 0.6; }
+.control-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.arrow { width: 18px; display: inline-block; margin-right: 0.25rem; }
+.recipe-image-container { position: relative; width: 110px; height: 110px; flex-shrink: 0; justify-self: end; align-self: start; }
+.recipe-image-placeholder { aspect-ratio: 1; background: var(--gray-500); border: 2px dashed var(--accent-color); border-radius: var(--border-radius); display: flex; justify-content: center; color: var(--text-color); font-size: 0.875rem; text-align: center; width: 110px; height: 110px; flex-shrink: 0; cursor: pointer; position: relative; overflow: hidden; }
+.recipe-image-placeholder:hover { border-color: color-mix(in srgb, var(--accent-color) 85%, black); background: var(--hover-bg); }
+.recipe-image-display { position: relative; width: 100%; height: 100%; border-radius: 4px; overflow: hidden; cursor: pointer; }
+.recipe-image-display img { width: 100%; height: 100%; object-fit: cover; border-radius: 4px; }
+.image-controls { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, var(--overlay-medium)); display: flex; gap: 2px; padding: 8px 4px 4px 4px; opacity: 0; }
+.recipe-image-display:hover .image-controls { opacity: 1; }
+.image-change-btn, .image-remove-btn { flex: 1; padding: 3px 6px; font-size: 0.6rem; border: none; border-radius: 3px; cursor: pointer; font-weight: 600; }
+.image-change-btn { background: var(--accent-color); color: var(--gray-800); }
+.image-change-btn:hover { background: color-mix(in srgb, var(--accent-color) 85%, black); }
+.image-remove-btn { background: var(--error-color); color: white; }
+.image-remove-btn:hover { background: color-mix(in srgb, var(--error-color) 85%, black); }
+.image-input-tabs { display: flex; margin-bottom: var(--spacing-md); border-bottom: 1px solid var(--gray-400); background: var(--gray-500); border-radius: var(--border-radius) var(--border-radius) 0 0; }
+.tab-btn { flex: 1; padding: var(--spacing-sm) var(--spacing-md); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; color: var(--text-color); font-weight: 500; }
+.tab-btn:hover { background: var(--hover-bg); }
+.tab-btn.active { border-bottom-color: var(--accent-color); color: var(--accent-color); background: var(--gray-800); }
+/* SVG Icon Styles */
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.icon-inline {
+  display: inline;
+  vertical-align: text-bottom;
+  margin-right: 0.25rem;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Icon color inherits from parent text color */
+.icon {
+  color: inherit;
+}
+
+.icon svg {
+  fill: currentColor;
+  stroke: currentColor;
+  display: block;
+}
+
+/* Ensure Lucide icons are visible */
+.icon svg[fill="none"] {
+  fill: none !important;
+  stroke: currentColor !important;
+}
+
+/* Fallback for icons that might not inherit color properly */
+.icon svg {
+  stroke: currentColor;
+  fill: none;
+}
+
+/* For buttons and links, ensure icon color is visible */
+button .icon svg,
+a .icon svg {
+  stroke: currentColor;
+  fill: none;
+}
+
+/* Header buttons specifically */
+.header-button .icon svg {
+  stroke: currentColor;
+  fill: none;
+}
+
+/* Specific icon colors */
+.icon-white svg {
+  fill: white;
+  stroke: white;
+}
+
+.icon-danger svg {
+  fill: var(--error-color);
+  stroke: var(--error-color);
+}
+
+.icon-success svg {
+  fill: var(--success-color);
+  stroke: var(--success-color);
+}
+
+.icon-warning svg {
+  fill: var(--warning-color);
+  stroke: var(--warning-color);
+}
+
+.icon-primary svg {
+  fill: var(--accent-color);
+  stroke: var(--accent-color);
+}
+
+/* Icon placeholder loading state */
+.icon-placeholder {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background: color-mix(in srgb, white 10%, transparent);
+  border-radius: 2px;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.6; }
+}
+
+/* === DEBUG COMPONENT === */
+
+/* Debug Toggle Button */
+.debug-toggle-btn {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  width: var(--floating-button-size);
+  height: var(--floating-button-size);
+  border-radius: 50%;
+  border: 1px solid var(--gray-400);
+  background: var(--gray-500);
+  color: var(--text-color);
+  font-size: 18px;
+  cursor: pointer;
+  z-index: var(--z-header);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px var(--shadow-color);
+  opacity: 0.3;
+}
+
+.debug-toggle-btn:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+  background: var(--gray-400);
+}
+
+.debug-toggle-btn.active {
+  background: var(--accent-color);
+  opacity: 1.0;
+}
+
+.debug-toggle-btn.debug-enabled {
+  border-color: var(--accent-color);
+  box-shadow: 0 2px 8px var(--hover-bg);
+}
+
+/* Debug Control Panel */
+.debug-control-panel {
+  position: fixed;
+  bottom: 70px;
+  left: 20px;
+  width: 300px;
+  background: var(--gray-800);
+  border: 1px solid var(--gray-400);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 4px 12px var(--shadow-color);
+  z-index: var(--z-navigation);
+  display: none;
+  font-size: 14px;
+  color: var(--text-color);
+}
+
+.debug-control-panel.show {
+  display: block;
+}
+
+/* Debug Panel Header */
+.debug-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.debug-panel-title {
+  margin: 0;
+  color: var(--accent-color);
+  font-size: 16px;
+}
+
+.debug-close-btn {
+  background: none;
+  border: none;
+  color: var(--muted-text-color);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.debug-close-btn:hover {
+  color: var(--text-color);
+}
+
+/* Debug Master Toggle */
+.debug-master-section {
+  margin-bottom: 1rem;
+}
+
+.debug-master-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.debug-master-toggle {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.debug-master-toggle.enabled {
+  background: var(--accent-color);
+  color: white;
+}
+
+.debug-master-toggle.disabled {
+  background: var(--gray-400);
+  color: var(--gray-200);
+}
+
+.debug-master-info {
+  color: var(--gray-300);
+  font-size: 12px;
+}
+
+/* Debug Categories */
+.debug-categories {
+  margin-bottom: 1rem;
+}
+
+.debug-category-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--gray-600);
+}
+
+.debug-category-item:last-child {
+  border-bottom: none;
+}
+
+.debug-category-label {
+  font-size: 13px;
+  color: var(--text-color);
+}
+
+.debug-category-checkbox {
+  margin-left: 0.5rem;
+}
+
+/* Debug Actions */
+.debug-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.debug-action-btn {
+  flex: 1;
+  padding: 0.4rem 0.8rem;
+  background: var(--gray-600);
+  border: 1px solid var(--gray-400);
+  border-radius: var(--border-radius);
+  color: var(--text-color);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.debug-action-btn:hover {
+  background: var(--gray-500);
+}
+
+/* === VERSION INFO === */
+.version-info {
+  position: fixed;
+  bottom: var(--spacing-xs);
+  left: var(--spacing-xs);
+  font-size: 10px;
+  color: var(--gray-900);
+  background: var(--gray-400);
+  padding: 2px 6px;
+  border-radius: 3px;
+  opacity: 0.6;
+  z-index: var(--z-base);
+  font-family: monospace;
+  cursor: default;
+  transition: opacity 0.2s ease;
+}
+
+.version-info:hover {
+  opacity: 1;
+}

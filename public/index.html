@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brewprints.io</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg">
+    <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico">
+
+    <!-- Fonts -->
+    <link rel="stylesheet" href="https://use.typekit.net/rjg8czz.css">
+
+    <!-- Stylesheets -->
+    <link rel="preload" href="/styles/base.css" as="style" onload="this.onload=null; this.rel='stylesheet'">
+    <link rel="preload" href="/styles/utilities.css" as="style" onload="this.onload=null; this.rel='stylesheet'">
+    <link rel="preload" href="/styles/components.css" as="style" onload="this.onload=null; this.rel='stylesheet'">
+    <link rel="preload" href="/styles/recipe.css" as="style" onload="this.onload=null; this.rel='stylesheet'">
+    <link rel="preload" href="/styles/data-preview.css" as="style" onload="this.onload=null; this.rel='stylesheet'">
+    <link rel="preload" href="/styles/my-recipes.css" as="style" onload="this.onload=null; this.rel='stylesheet'">
+    <link rel="preload" href="/styles/print.css" as="style" onload="this.onload=null; this.rel='stylesheet'">
+    <noscript>
+        <link rel="stylesheet" href="/styles/base.css">
+        <link rel="stylesheet" href="/styles/utilities.css">
+        <link rel="stylesheet" href="/styles/components.css">
+        <link rel="stylesheet" href="/styles/recipe.css">
+        <link rel="stylesheet" href="/styles/data-preview.css">
+        <link rel="stylesheet" href="/styles/my-recipes.css">
+        <link rel="stylesheet" href="/styles/print.css">
+    </noscript>
+</head>
+<body>
+
+    <!-- Upload Page -->
+    <div id="fileInputContainer" class="page active">
+        <div class="upload-container">
+            <div class="upload-header">
+                <h1><img src="/img/Splash_520x520.png" alt="Brewprints.io" class="app-logo"></h1>
+                <p>Transform your homebrew recipes into beautiful, printable brew logs</p>
+            </div>
+            
+            <div class="upload-area">
+                <input type="file" id="fileInput" accept=".xml,.beerxml,.json" hidden>
+                <div class="upload-zone" id="upload-zone">
+                    <div class="upload-icon">📄</div>
+                    <h3>Upload Your Recipe</h3>
+                    <p>Drop your recipe file here or click to select</p>
+                    <p class="format-support">Supports BeerXML, BeerJSON, and Brewfather formats</p>
+                    <button id="upload-button" class="btn btn--primary btn--large">Choose File</button>
+                </div>
+                <div id="error-msg" class="error-message u-hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Recipes Page -->
+    <div id="my-recipes-page" class="page">
+        <div class="my-recipes-container">
+            <div class="my-recipes-header">
+                <h1>My Recipes</h1>
+            </div>
+            <div id="recipesList" class="recipes-list">
+                <!-- Saved recipes will be populated here -->
+            </div>
+            <div id="emptyState" class="empty-state u-hidden">
+                <p>No saved recipes yet. Upload and save a recipe to get started!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recipe Display Page -->
+    <div id="recipe-page" class="page">
+
+        <!-- Section Controls -->
+        <div id="sectionControls" class="print-settings no-print u-hidden">
+            <div class="settings-section">
+                <h3>Recipe Sections</h3>
+                <div class="settings-grid" id="section-toggles">
+                    <!-- Section toggles will be populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Recipe Content -->
+        <div id="recipeContainer" class="recipe-content">
+            <!-- Recipe sections will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Clerk SDK -->
+    <script
+      async
+      crossorigin="anonymous"
+      data-clerk-publishable-key="pk_test_Y2hhbXBpb24tbWluay0yNi5jbGVyay5hY2NvdW50cy5kZXYk"
+      src="https://champion-mink-26.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+      onload="window.Clerk.load()"
+    ></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <!-- Scripts -->
+    <script type="module" src="/js/core/main.js"></script>
+</body>
+</html>

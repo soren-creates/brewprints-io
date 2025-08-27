@@ -1,0 +1,595 @@
+/* My Recipes Page Styles */
+
+.my-recipes-container {
+  max-width: var(--container-max-width);
+  margin: 0 auto;
+  padding: var(--spacing-md);
+}
+
+/* Sign-in prompt styles */
+.sign-in-prompt {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  color: var(--muted-text-color);
+}
+
+.sign-in-prompt h3 {
+  color: var(--accent-color);
+  margin-bottom: var(--spacing-md);
+}
+
+.sign-in-prompt p {
+  margin-bottom: var(--spacing-xl);
+}
+
+.sign-in-button {
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: var(--spacing-md);
+}
+
+.sign-in-button:hover {
+  background: color-mix(in srgb, var(--accent-color) 85%, black);
+}
+
+/* Privacy status colors */
+.privacy-status-private {
+  color: var(--muted-text-color);
+}
+
+.privacy-status-unlisted {
+  color: var(--warning-color);
+}
+
+.privacy-status-public {
+  color: var(--success-color);
+}
+
+
+.my-recipes-header {
+  margin-bottom: var(--spacing-xl);
+  text-align: center;
+}
+
+.my-recipes-header h1 {
+  color: var(--accent-color);
+  margin: 0;
+}
+
+.recipes-list {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--spacing-md-sm) + var(--spacing-3xs));
+  margin-bottom: var(--spacing-xl);
+}
+
+.recipe-card {
+  background: var(--gray-600);
+  border: 1px solid var(--gray-400);
+  border-radius: var(--spacing-sm);
+  padding: 0;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+  z-index: var(--z-base);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  
+  /* Background image properties */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.recipe-card.has-background-image {
+  background-image: var(--recipe-bg-image);
+}
+
+.recipe-card:hover {
+  border-color: var(--accent-color);
+  box-shadow: 0px 0px 16px 1px var(--accent-glow-shadow);
+  z-index: var(--z-content);
+}
+
+.recipe-card:hover .recipe-card-overlay {
+  background: var(--overlay-transparent);
+}
+
+/* When a recipe card has an open menu, it should be above other cards */
+.recipe-card.menu-open {
+  z-index: var(--z-toast);
+}
+
+/* Recipe card overlay for better text readability over background images */
+.recipe-card-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--overlay-light);
+  backdrop-filter: blur(20px);
+  z-index: var(--z-base);
+}
+
+/* Additional gradient overlay from right edge for action buttons readability */
+.recipe-card-overlay::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 200px;
+  background: var(--gradient-overlay);
+  z-index: var(--z-base);
+}
+
+/* Keep gradient overlay persistent during hover (don't make it transparent) */
+.recipe-card:hover .recipe-card-overlay::after {
+  background: var(--gradient-overlay);
+}
+
+/* Recipe card content wrapper */
+.recipe-card-content {
+  position: relative;
+  z-index: var(--z-content);
+  padding: calc(var(--spacing-md-sm) + var(--spacing-3xs));
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 0;
+}
+
+.recipe-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: calc(var(--spacing-md) + var(--spacing-3xs));
+}
+
+.recipe-top-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: calc(var(--spacing-2xs) + var(--spacing-3xs));
+  flex-shrink: 0;
+  min-width: fit-content;
+}
+
+.recipe-name {
+  font-size: 3.4rem;
+  font-family: "gluten-variable", sans-serif;
+  font-weight: 600;
+  color: var(--text-color);
+  margin: 0;
+  line-height: 0.8;
+  flex: 1;
+  min-width: 0;
+  text-shadow: var(--text-shadow-strong);
+}
+
+.recipe-style {
+  color: var(--text-color);
+  font-size: calc(var(--spacing-md) + var(--spacing-xs));
+  font-family: "grandstander-variable", sans-serif;
+  font-style: italic;
+  font-weight: 300;
+  text-shadow: var(--text-shadow-medium);
+}
+
+.recipe-date {
+  color: var(--muted-text-color);
+  font-size: calc(var(--spacing-md-sm) + var(--spacing-3xs));
+  line-height: 1;
+}
+
+.recipe-bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: auto;
+}
+
+.recipe-info-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-3xs);
+}
+
+.recipe-privacy-status {
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  white-space: nowrap;
+  font-weight: 500;
+  opacity: 0.8;
+}
+
+.recipe-privacy-status:hover {
+  opacity: 1;
+}
+
+
+.recipe-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.recipe-action-btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: 0.875rem;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-weight: 500;
+}
+
+.recipe-action-btn.primary {
+  flex: 2;
+  background: var(--accent-color);
+  color: white;
+}
+
+.recipe-action-btn.primary:hover {
+  background: color-mix(in srgb, var(--accent-color) 85%, black);
+}
+
+.recipe-action-btn.secondary {
+  flex: 1;
+  background: var(--gray-500);
+  color: var(--text-color);
+  border: 1px solid var(--gray-400);
+}
+
+.recipe-action-btn.secondary:hover {
+  background: var(--gray-400);
+}
+
+/* Recipe Menu Dropdown */
+.recipe-menu-container {
+  position: relative;
+  z-index: var(--z-base);
+}
+
+.recipe-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--gray-600);
+  border: 1px solid var(--gray-400);
+  border-radius: var(--border-radius);
+  box-shadow: 0 4px 8px var(--shadow-color);
+  z-index: var(--z-dropdown);
+  min-width: 160px;
+  margin-top: var(--spacing-2xs);
+}
+
+.recipe-menu.u-hidden {
+  display: none;
+}
+
+.menu-item {
+  display: block;
+  width: 100%;
+  padding: var(--spacing-md-sm) var(--spacing-md);
+  font-size: 0.875rem;
+  background: none;
+  border: none;
+  color: var(--text-color);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.menu-item:hover {
+  background: var(--accent-color);
+  color: white;
+}
+
+.menu-item:first-child {
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.menu-item:last-child {
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.load-btn {
+  background: var(--accent-color);
+  color: white;
+}
+
+.load-btn:hover {
+  background: color-mix(in srgb, var(--accent-color) 85%, black);
+}
+
+.share-btn {
+  background: var(--success-color);
+  color: white;
+}
+
+.share-btn:hover {
+  background: color-mix(in srgb, var(--success-color) 85%, black);
+}
+
+
+.delete-btn {
+  background: var(--error-color);
+  color: white;
+}
+
+.delete-btn:hover {
+  background: color-mix(in srgb, var(--error-color) 85%, black);
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  color: var(--muted-text-color);
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Loading state */
+.loading-recipes {
+  text-align: center;
+  padding: var(--spacing-2xl);
+  color: var(--muted-text-color);
+}
+
+/* Share modal */
+/* Share modal uses standard .modal-base structure from components.css */
+
+/* Share modal uses standardized .modal-content from components.css */
+
+/* Share modal specific styles */
+.privacy-info {
+  padding: var(--spacing-sm) 0;
+  margin-bottom: var(--spacing-md);
+  color: var(--muted-text-color);
+  font-size: 0.9rem;
+}
+
+.share-url-container {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  align-items: center;
+}
+
+.share-help {
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--gray-400);
+  color: var(--muted-text-color);
+  font-size: 0.85rem;
+}
+
+.generate-new-btn {
+  padding: var(--spacing-sm);
+  background: var(--gray-500);
+  border: 1px solid var(--gray-400);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.generate-new-btn:hover {
+  background: var(--gray-400);
+}
+
+.share-url-input {
+  flex: 1;
+  padding: var(--spacing-sm);
+  background: var(--gray-800);
+  border: 1px solid var(--gray-400);
+  border-radius: var(--border-radius);
+  color: var(--text-color);
+  font-family: monospace;
+  font-size: 12.5px;
+}
+
+.copy-btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+}
+
+.copy-btn:hover {
+  background: color-mix(in srgb, var(--accent-color) 85%, black);
+}
+
+.copy-btn.copied {
+  background: var(--success-color);
+}
+
+/* Privacy Dialog */
+
+/* Privacy modal specific styles */
+.privacy-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md-sm);
+}
+
+.privacy-option {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--gray-500);
+  border: 2px solid transparent;
+  border-radius: calc(var(--border-radius) + var(--spacing-2xs));
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.privacy-option:hover:not(:disabled) {
+  border-color: var(--accent-color);
+  background: color-mix(in srgb, var(--accent-color) 10%, var(--gray-500));
+}
+
+/* Current privacy status highlighting - higher specificity */
+.privacy-option.privacy-option--current {
+  border-color: var(--accent-color) !important;
+  background: color-mix(in srgb, var(--accent-color) 15%, var(--gray-500)) !important;
+}
+
+/* Disabled state styling */
+.privacy-option:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.privacy-option:disabled .privacy-info strong,
+.privacy-option:disabled .privacy-info p {
+  opacity: 0.8;
+}
+
+.privacy-icon {
+  font-size: 1.5rem;
+  min-width: 1.5rem;
+}
+
+.privacy-info {
+  flex: 1;
+}
+
+.privacy-info strong {
+  display: block;
+  color: var(--text-color);
+  font-size: var(--spacing-md);
+  margin-bottom: 0;
+}
+
+.privacy-info p {
+  color: var(--muted-text-color);
+  font-size: 0.875rem;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Modal styles now use standardized classes from components.css:
+   .modal-header, .modal-title, .modal-close, .modal-body */
+
+/* === SHARE MODAL === */
+
+/* Privacy Info Box */
+.privacy-info {
+  padding: var(--spacing-md-sm);
+  border-radius: var(--border-radius);
+}
+
+/* Share URL Container */
+.share-url-container {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Generate New Link Button */
+.generate-new-btn {
+  background: var(--gray-400);
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+}
+
+.generate-new-btn:hover {
+  background: color-mix(in srgb, var(--gray-400) 85%, black);
+}
+
+/* Share URL Input */
+.share-url-input {
+  flex: 1;
+}
+
+/* Share Help Box */
+.share-help {
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md-sm);
+  background: var(--gray-600);
+  border-radius: var(--border-radius);
+  font-size: 0.85rem;
+  color: var(--muted-text-color);
+}
+
+/* === PRIVACY MODAL === */
+
+/* Privacy Options Container */
+.privacy-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md-sm);
+}
+
+/* Privacy Option */
+.privacy-option {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  padding-left: var(--spacing-lg);
+  background: var(--gray-500);
+  border: 1px solid var(--gray-400);
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.privacy-option:hover:not(:disabled) {
+  background: var(--gray-600);
+}
+
+.privacy-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Privacy Icon */
+.privacy-icon {
+  font-size: calc(var(--spacing-md) + var(--spacing-xs));
+  min-width: 1.8rem;
+  text-align: center;
+}
+
+/* Privacy Info Text */
+.privacy-info {
+  flex: 1;
+}
+
+.privacy-info strong {
+  color: var(--text-color);
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.privacy-info p {
+  color: var(--muted-text-color);
+  margin: 0;
+  font-size: calc(var(--spacing-md-sm) + var(--spacing-3xs));
+}
+
