@@ -1,2 +1,27 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Force LF line endings for Firebase Functions (required by ESLint)
+functions/*.js text eol=lf
+functions/**/*.js text eol=lf
+functions/.eslintrc.js text eol=lf
+functions/*.json text eol=lf
+functions/**/*.json text eol=lf
+
+# Force LF for all JavaScript and JSON files (consistency)
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+
+# Force LF for configuration files
+.env* text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+
+# Binary files (should not be modified)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text eol=lf

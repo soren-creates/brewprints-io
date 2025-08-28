@@ -3,7 +3,7 @@
  * Handles saving and loading recipes from Firebase
  */
 
-import { firebaseConfig } from '../core/firebase-config.js';
+import { loadFirebaseConfig } from '../core/firebase-config.js';
 import { errorHandler } from '../utilities/errors/error-handler.js';
 import { clerkAuth } from '../auth/clerk-config.js';
 import { loadingManager } from '../ui/components/loading-manager.js';
@@ -62,9 +62,10 @@ class StorageManager {
         return;
       }
 
-      // Initialize Firebase app
+      // Load Firebase configuration and initialize app
       if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+        const config = await loadFirebaseConfig();
+        firebase.initializeApp(config);
       }
 
       // Get database reference

@@ -2,18 +2,44 @@
  * Firebase Configuration
  */
 
-// Note: Firebase client-side API keys are safe to expose publicly
-// They are restricted by Firebase security rules, not by secrecy
-// See: https://firebase.google.com/docs/projects/api-keys
-const firebaseConfig = {
-  apiKey: "AIzaSyDGmGsjTvHZGTOINTo1nwzZ7OKghWdKwN4", // Public client key - safe to expose
-  authDomain: "brewprints-io.firebaseapp.com",
-  databaseURL: "https://brewprints-io-default-rtdb.firebaseio.com",
-  projectId: "brewprints-io",
-  storageBucket: "brewprints-io.firebasestorage.app",
-  messagingSenderId: "645183140420",
-  appId: "1:645183140420:web:ee44475a79cc7a3dbcc211"
-};
+// Cache for the configuration
+let cachedConfig = null;
 
-// Export the config
-export { firebaseConfig };
+/**
+ * Loads Firebase configuration from the secure function endpoint
+ * @returns {Promise<Object>} Firebase configuration object
+ */
+async function loadFirebaseConfig() {
+  if (cachedConfig) {
+    return cachedConfig;
+  }
+
+  try {
+    // Fetch configuration from Firebase Function via hosting rewrite
+    const response = await fetch('/api/config');
+    
+    if (!response.ok) {
+      throw new Error(`Config fetch failed: ${response.status}`);
+    }
+    
+    cachedConfig = await response.json();
+    return cachedConfig;
+  } catch (error) {
+    console.error('Failed to load Firebase configuration:', error);
+    
+    // Fallback configuration for development
+    cachedConfig = {
+      apiKey: "FIREBASE_API_KEY_NOT_SET",
+      authDomain: "brewprints-io.firebaseapp.com",
+      databaseURL: "https://brewprints-io-default-rtdb.firebaseio.com",
+      projectId: "brewprints-io",
+      storageBucket: "brewprints-io.firebasestorage.app",
+      messagingSenderId: "MESSAGING_SENDER_ID_NOT_SET",
+      appId: "APP_ID_NOT_SET"
+    };
+    return cachedConfig;
+  }
+}
+
+// Export the loader function
+export { loadFirebaseConfig };

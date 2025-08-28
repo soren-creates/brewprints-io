@@ -12,12 +12,11 @@ try {
     branch
   };
 
-  // For public repo: write to public/js/core/version.js (same structure as dev repo)
   fs.writeFileSync('./public/js/core/version.js', 
     `export const VERSION_INFO = ${JSON.stringify(versionInfo, null, 2)};`
   );
   
-  console.log(`✅ Version ${gitHash} ready for deployment from public repo`);
+  console.log(`✅ Version ${gitHash} ready for deployment`);
 } catch (error) {
   console.error('❌ Version generation failed:', error.message);
   process.exit(1);

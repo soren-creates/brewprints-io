@@ -153,19 +153,34 @@ A specialized web application that converts recipe files (BeerXML 1.0, BeerJSON 
 
 No build process required. This is a static web application using vanilla JavaScript with ES6 modules.
 
-### Local Server Setup
+### Local Development Server
 
-**Visual Studio Code**: Use the "Live Server" extension
+**Firebase Serve** (Recommended for full functionality):
+```bash
+firebase serve
+```
+
+This provides:
+- Static file serving from `public/` directory
+- Firebase Functions emulation for API endpoints
+- Production-like environment with hosting rewrites
+- Typically runs on `http://localhost:5000`
+
+**Static Server Options** (Limited functionality - no cloud features):
+
+**Visual Studio Code**: Right-click on `public` folder and select "Open with Live Server"
 
 **Node.js**: 
 ```bash
-npx http-server
+npx http-server public -p 3000
 ```
 
 **Python**: 
 ```bash
-python -m http.server 3000
+cd public && python -m http.server 3000
 ```
+
+**Note**: Static servers won't have access to Firebase Functions, so cloud storage and sharing features will use fallback configurations.
 
 ### Testing & Debugging
 

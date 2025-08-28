@@ -22,6 +22,6 @@
         "destination": "/index.html"
       }
     ],
-    "predeploy": ["node scripts/deploy-public.js"]
+    "predeploy": ["node scripts/deploy.js"]
   }
 }
