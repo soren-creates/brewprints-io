@@ -9,6 +9,7 @@
 import { EVENTS } from '../../core/constants.js';
 import { errorHandler } from '../../utilities/errors/error-handler.js';
 import { DataLoadError, ValidationError } from '../../utilities/errors/application-errors.js';
+import { TIMING } from '../../core/timing-constants.js';
 
 /**
  * View configuration object defining show/hide elements and special actions for each view
@@ -17,7 +18,7 @@ import { DataLoadError, ValidationError } from '../../utilities/errors/applicati
 const VIEW_CONFIGS = {
   'upload': {
     show: ['fileInputContainer'],
-    hide: ['recipe-page', 'data-preview-page', 'my-recipes-page', 'sectionControls'],
+    hide: ['initialLoadingContainer', 'recipe-page', 'data-preview-page', 'my-recipes-page', 'sectionControls'],
     specialActions: ['clearData', 'resetFileInput', 'clearRecipeContainer'],
     scrollBehavior: 'immediate',
     requirements: null,
@@ -26,7 +27,7 @@ const VIEW_CONFIGS = {
   },
   'data-preview': {
     show: ['data-preview-page'],  
-    hide: ['fileInputContainer', 'recipe-page', 'my-recipes-page'],
+    hide: ['initialLoadingContainer', 'fileInputContainer', 'recipe-page', 'my-recipes-page'],
     specialActions: ['createDataPreviewIfNeeded'],
     scrollBehavior: 'immediate',
     requirements: 'parsedData',
@@ -35,7 +36,7 @@ const VIEW_CONFIGS = {
   },
   'recipe-view': {
     show: ['recipe-page', 'sectionControls'],
-    hide: ['fileInputContainer', 'data-preview-page', 'my-recipes-page'], 
+    hide: ['initialLoadingContainer', 'fileInputContainer', 'data-preview-page', 'my-recipes-page'], 
     specialActions: ['disableScrollRestoration'],
     scrollBehavior: 'delayed',
     requirements: null,
@@ -44,7 +45,7 @@ const VIEW_CONFIGS = {
   },
   'my-recipes': {
     show: ['my-recipes-page'],
-    hide: ['fileInputContainer', 'recipe-page', 'data-preview-page', 'sectionControls'],
+    hide: ['initialLoadingContainer', 'fileInputContainer', 'recipe-page', 'data-preview-page', 'sectionControls'],
     specialActions: [],
     scrollBehavior: 'immediate',
     requirements: null,
@@ -172,7 +173,42 @@ export class NavigationManager {
     if (behavior === 'immediate') {
       window.scrollTo(0, 0);
     } else if (behavior === 'delayed') {
-      setTimeout(() => window.scrollTo(0, 0), 1);
+      setTimeout(() => window.scrollTo(0, 0), TIMING.SCROLL_DELAY);
+    }
+  }
+
+  /**
+   * Update document title based on current view and recipe data
+   * @param {string} viewName - Name of the current view
+   */
+  _updateDocumentTitle(viewName) {
+    const baseTitle = 'Brewprints.io';
+    
+    switch(viewName) {
+      case 'recipe-view':
+        if (this.currentRecipe && this.currentRecipe.name) {
+          document.title = `${this.currentRecipe.name} - ${baseTitle}`;
+        } else {
+          document.title = `Recipe - ${baseTitle}`;
+        }
+        break;
+      
+      case 'data-preview':
+        if (this.validatedData && this.validatedData.name) {
+          document.title = `${this.validatedData.name} - Field Coverage - ${baseTitle}`;
+        } else {
+          document.title = `Field Coverage - ${baseTitle}`;
+        }
+        break;
+      
+      case 'my-recipes':
+        document.title = `My Recipes - ${baseTitle}`;
+        break;
+      
+      case 'upload':
+      default:
+        document.title = baseTitle;
+        break;
     }
   }
 
@@ -239,6 +275,9 @@ export class NavigationManager {
 
     // Update current view
     this.currentView = config.currentViewName;
+
+    // Update document title based on view
+    this._updateDocumentTitle(viewName);
 
     // Dispatch page changed event
     window.dispatchEvent(new CustomEvent(EVENTS.PAGE_CHANGED, { 

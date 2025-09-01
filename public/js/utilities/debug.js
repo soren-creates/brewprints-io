@@ -10,16 +10,33 @@ class Debug {
     this.enabledCategories = new Set();
     this.usedCategories = new Set(); // Track categories that actually have debug statements
     
+    // Detect environment for security
+    this.isProduction = this.detectProductionMode();
+    
     // Load debug state from localStorage first
     this.loadState();
     
     // Pre-register all available debug categories (and set defaults if needed)
     this.registerCategories();
     
-    // Expose to window for easy console access
-    if (typeof window !== 'undefined') {
+    // Expose to window for easy console access (development only)
+    if (typeof window !== 'undefined' && !this.isProduction) {
       window.debug = this;
     }
+  }
+
+  /**
+   * Detect production mode for security measures
+   * @returns {boolean} True if running in production
+   */
+  detectProductionMode() {
+    // Same logic as environment config
+    const hostname = window.location.hostname;
+    const devHostnames = ['localhost', '127.0.0.1', '0.0.0.0'];
+    const isDevHostname = devHostnames.some(devHost => hostname === devHost || hostname.includes(devHost));
+    const hasDevPort = window.location.port && parseInt(window.location.port) < 8000;
+    
+    return !(isDevHostname || hasDevPort || window.location.search.includes('dev=true'));
   }
 
   /**
@@ -29,12 +46,12 @@ class Debug {
     const availableCategories = [
       'storage', 'parser', 'validator', 'auth', 
       'calculator', 'renderer', 'error', 'offline', 
-      'duplicate', 'loading'
+      'duplicate', 'loading', 'serviceworker', 'ui'
     ];
     
     // Categories that have debug statements implemented
     const implementedCategories = [
-      'storage', 'parser', 'validator', 'offline', 'duplicate', 'loading'
+      'storage', 'parser', 'validator', 'offline', 'duplicate', 'loading', 'auth', 'serviceworker', 'ui'
     ];
     
     availableCategories.forEach(category => {
@@ -67,15 +84,27 @@ class Debug {
   }
 
   /**
-   * Save debug state to localStorage
+   * Save debug state to localStorage (production-safe)
    */
   saveState() {
     try {
-      const state = {
-        enabled: this.enabled,
-        enabledCategories: Array.from(this.enabledCategories)
-      };
-      localStorage.setItem('brewlog-debug-state', JSON.stringify(state));
+      if (this.isProduction) {
+        // Production: Only save essential state, no sensitive information
+        const safeState = {
+          enabled: this.enabled,
+          enabledCategories: Array.from(this.enabledCategories).filter(cat => 
+            ['error', 'auth'].includes(cat) // Only allow essential categories in production
+          )
+        };
+        localStorage.setItem('brewlog-debug-state', JSON.stringify(safeState));
+      } else {
+        // Development: Full debug state
+        const state = {
+          enabled: this.enabled,
+          enabledCategories: Array.from(this.enabledCategories)
+        };
+        localStorage.setItem('brewlog-debug-state', JSON.stringify(state));
+      }
     } catch (error) {
       // Ignore localStorage errors
     }
@@ -309,5 +338,7 @@ export const DEBUG_CATEGORIES = {
   ERROR: 'error',
   OFFLINE: 'offline',
   DUPLICATE: 'duplicate',
-  LOADING: 'loading'
+  LOADING: 'loading',
+  SERVICEWORKER: 'serviceworker',
+  UI: 'ui'
 };

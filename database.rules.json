@@ -7,6 +7,7 @@
         ".read": "auth != null && auth.uid != null",
         ".write": "auth != null && auth.uid != null",
         "recipes": {
+          ".indexOn": "savedAt",
           "$recipeId": {
             ".read": "(auth != null && auth.uid != null && ($userId == auth.uid || data.child('isPublic').val() == true || data.child('privacy').val() == 'public' || data.child('privacy').val() == 'unlisted'))",
             ".write": "auth != null && auth.uid != null",

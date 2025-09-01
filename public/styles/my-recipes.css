@@ -61,6 +61,31 @@
   margin: 0;
 }
 
+/* Recipes Loading State */
+.recipes-loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-3xl);
+    gap: var(--spacing-md);
+}
+
+.recipes-loading-state .loading-spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--gray-300);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.recipes-loading-state p {
+    color: var(--muted-text-color);
+    margin: 0;
+    font-size: 0.95rem;
+}
+
 .recipes-list {
   display: flex;
   flex-direction: column;
@@ -73,7 +98,7 @@
   border: 1px solid var(--gray-400);
   border-radius: var(--spacing-sm);
   padding: 0;
-  transition: all 0.3s ease;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
   position: relative;
   z-index: var(--z-base);
@@ -88,8 +113,47 @@
   background-repeat: no-repeat;
 }
 
-.recipe-card.has-background-image {
+.recipe-card {
+  /* Prepare for background image transition */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+/* Create a pseudo-element for smooth image fade-in */
+.recipe-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0;
+  transition: opacity 0.6s ease-out;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.recipe-card.has-background-image::before {
   background-image: var(--recipe-bg-image);
+}
+
+.recipe-card.image-revealed::before {
+  opacity: 1;
+}
+
+/* Recipe card fade-in using transition instead of animation */
+.recipe-card {
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+
+.recipe-card.card-fade-in {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
 }
 
 .recipe-card:hover {
@@ -116,7 +180,7 @@
   bottom: 0;
   background: var(--overlay-light);
   backdrop-filter: blur(20px);
-  z-index: var(--z-base);
+  z-index: 1; /* Above the background image pseudo-element */
 }
 
 /* Additional gradient overlay from right edge for action buttons readability */
@@ -165,7 +229,7 @@
 
 .recipe-name {
   font-size: 3.4rem;
-  font-family: "gluten-variable", sans-serif;
+  font-family: var(--heading-font-family), sans-serif;
   font-weight: 600;
   color: var(--text-color);
   margin: 0;
@@ -175,10 +239,14 @@
   text-shadow: var(--text-shadow-strong);
 }
 
+.recipe-card:hover .recipe-name {
+  color: var(--text-hover-color);
+}
+
 .recipe-style {
   color: var(--text-color);
   font-size: calc(var(--spacing-md) + var(--spacing-xs));
-  font-family: "grandstander-variable", sans-serif;
+  font-family: var(--subheading-font-family), sans-serif;
   font-style: italic;
   font-weight: 300;
   text-shadow: var(--text-shadow-medium);
@@ -357,7 +425,6 @@
 /* Share modal specific styles */
 .privacy-info {
   padding: var(--spacing-sm) 0;
-  margin-bottom: var(--spacing-md);
   color: var(--muted-text-color);
   font-size: 0.9rem;
 }
@@ -496,7 +563,7 @@
 
 /* Privacy Info Box */
 .privacy-info {
-  padding: var(--spacing-md-sm);
+  padding: 0 var(--spacing-md-sm) var(--spacing-md-sm);
   border-radius: var(--border-radius);
 }
 

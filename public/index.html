@@ -9,21 +9,39 @@
     <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg">
     <link rel="icon" type="image/x-icon" href="/favicon/favicon.ico">
 
+    <!-- Performance Optimization: DNS Prefetching and Preconnections -->
+    <link rel="dns-prefetch" href="//brewprints-io-default-rtdb.firebaseio.com">
+    <link rel="dns-prefetch" href="//www.gstatic.com">
+    <link rel="dns-prefetch" href="//champion-mink-26.clerk.accounts.dev">
+    <link rel="dns-prefetch" href="//unpkg.com">
+    <link rel="preconnect" href="https://www.gstatic.com">
+    <link rel="preconnect" href="https://brewprints-io-default-rtdb.firebaseio.com">
+
+    <!-- Performance Optimization: Module Preloading -->
+    <link rel="modulepreload" href="/js/core/firebase-config.js">
+    <link rel="modulepreload" href="/js/storage/storage-manager.js">
+    <link rel="modulepreload" href="/js/auth/clerk-config.js">
+    <link rel="modulepreload" href="/js/core/main.js">
+
     <!-- Fonts -->
     <link rel="stylesheet" href="https://use.typekit.net/rjg8czz.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredericka+the+Great&display=swap" rel="stylesheet">
 
-    <!-- Stylesheets -->
-    <link rel="preload" href="/styles/base.css" as="style" onload="this.onload=null; this.rel='stylesheet'">
-    <link rel="preload" href="/styles/utilities.css" as="style" onload="this.onload=null; this.rel='stylesheet'">
-    <link rel="preload" href="/styles/components.css" as="style" onload="this.onload=null; this.rel='stylesheet'">
-    <link rel="preload" href="/styles/recipe.css" as="style" onload="this.onload=null; this.rel='stylesheet'">
-    <link rel="preload" href="/styles/data-preview.css" as="style" onload="this.onload=null; this.rel='stylesheet'">
-    <link rel="preload" href="/styles/my-recipes.css" as="style" onload="this.onload=null; this.rel='stylesheet'">
-    <link rel="preload" href="/styles/print.css" as="style" onload="this.onload=null; this.rel='stylesheet'">
+    <!-- Critical Path CSS (load immediately) -->
+    <link rel="stylesheet" href="/styles/base.css" media="all">
+    <link rel="stylesheet" href="/styles/utilities.css" media="all">
+    <link rel="stylesheet" href="/styles/components.css" media="all">
+    
+    <!-- Non-critical CSS (lazy load) -->
+    <link rel="preload" href="/styles/recipe.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/styles/data-preview.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/styles/my-recipes.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <link rel="preload" href="/styles/print.css" as="style" onload="this.onload=null;this.rel='stylesheet';this.media='print'">
+    
+    <!-- Fallback for no-JS -->
     <noscript>
-        <link rel="stylesheet" href="/styles/base.css">
-        <link rel="stylesheet" href="/styles/utilities.css">
-        <link rel="stylesheet" href="/styles/components.css">
         <link rel="stylesheet" href="/styles/recipe.css">
         <link rel="stylesheet" href="/styles/data-preview.css">
         <link rel="stylesheet" href="/styles/my-recipes.css">
@@ -32,8 +50,16 @@
 </head>
 <body>
 
+    <!-- Initial Loading State -->
+    <div id="initialLoadingContainer" class="page active">
+        <div class="initial-loading">
+            <img src="/img/Splash_520x520.png" alt="Brewprints.io" class="app-logo loading-logo">
+            <div class="loading-spinner"></div>
+        </div>
+    </div>
+
     <!-- Upload Page -->
-    <div id="fileInputContainer" class="page active">
+    <div id="fileInputContainer" class="page">
         <div class="upload-container">
             <div class="upload-header">
                 <h1><img src="/img/Splash_520x520.png" alt="Brewprints.io" class="app-logo"></h1>
@@ -88,14 +114,42 @@
         </div>
     </div>
 
-    <!-- Clerk SDK -->
-    <script
-      async
-      crossorigin="anonymous"
-      data-clerk-publishable-key="pk_test_Y2hhbXBpb24tbWluay0yNi5jbGVyay5hY2NvdW50cy5kZXYk"
-      src="https://champion-mink-26.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
-      onload="window.Clerk.load()"
-    ></script>
+    <!-- Clerk SDK - Environment-Based Configuration -->
+    <script type="module">
+      // Import environment configuration
+      import { environmentConfig } from './js/config/environment.js';
+      
+      // Load configuration first, then initialize Clerk
+      async function initializeClerk() {
+        try {
+          // Load the configuration from Firebase Functions
+          await environmentConfig.loadConfig();
+          
+          // Now initialize Clerk with the loaded key
+          const script = document.createElement('script');
+          script.async = true;
+          script.crossOrigin = 'anonymous';
+          script.setAttribute('data-clerk-publishable-key', environmentConfig.getClerkKey());
+          script.src = 'https://champion-mink-26.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js';
+          script.onload = () => {
+            window.Clerk.load();
+          };
+          script.onerror = (error) => {
+            console.error('Failed to load Clerk:', error);
+          };
+          document.head.appendChild(script);
+        } catch (error) {
+          console.error('Failed to load configuration for Clerk:', error);
+        }
+      }
+      
+      // Initialize when DOM is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeClerk);
+      } else {
+        initializeClerk();
+      }
+    </script>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -105,6 +159,117 @@
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     
+    <!-- Service Worker Registration & Performance Monitoring -->
+    <script type="module">
+      import { debug, DEBUG_CATEGORIES } from './js/utilities/debug.js';
+      
+      // Core Web Vitals monitoring
+      function trackWebVital(name, value, rating) {
+        debug.log(DEBUG_CATEGORIES.UI, `Web Vital ${name}: ${value}ms (${rating})`);
+        
+        // Store in localStorage for debugging/analysis (production-safe)
+        try {
+          const isProduction = window.location.hostname !== 'localhost' && 
+                               window.location.hostname !== '127.0.0.1' &&
+                               !window.location.search.includes('dev=true');
+          
+          if (!isProduction) {
+            // Development: Store detailed Web Vitals data
+            const vitals = JSON.parse(localStorage.getItem('web-vitals') || '[]');
+            vitals.push({
+              name,
+              value,
+              rating,
+              timestamp: Date.now(),
+              url: window.location.pathname
+            });
+            // Keep only last 10 measurements
+            if (vitals.length > 10) vitals.shift();
+            localStorage.setItem('web-vitals', JSON.stringify(vitals));
+          } else {
+            // Production: Only store aggregated data, no URL paths
+            const summary = JSON.parse(localStorage.getItem('web-vitals-summary') || '{}');
+            summary[name] = {
+              lastValue: value,
+              lastRating: rating,
+              lastUpdate: Date.now()
+            };
+            localStorage.setItem('web-vitals-summary', JSON.stringify(summary));
+          }
+        } catch (e) {
+          // Ignore localStorage errors
+        }
+      }
+      
+      // Largest Contentful Paint (LCP)
+      if ('PerformanceObserver' in window) {
+        try {
+          const lcpObserver = new PerformanceObserver((list) => {
+            const entries = list.getEntries();
+            const lastEntry = entries[entries.length - 1];
+            const value = Math.round(lastEntry.startTime);
+            const rating = value <= 2500 ? 'good' : value <= 4000 ? 'needs-improvement' : 'poor';
+            trackWebVital('LCP', value, rating);
+          });
+          lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+        } catch (e) {
+          debug.warn(DEBUG_CATEGORIES.UI, 'LCP monitoring failed:', e);
+        }
+
+        // First Input Delay (FID) 
+        try {
+          const fidObserver = new PerformanceObserver((list) => {
+            list.getEntries().forEach((entry) => {
+              const value = Math.round(entry.processingStart - entry.startTime);
+              const rating = value <= 100 ? 'good' : value <= 300 ? 'needs-improvement' : 'poor';
+              trackWebVital('FID', value, rating);
+            });
+          });
+          fidObserver.observe({ type: 'first-input', buffered: true });
+        } catch (e) {
+          debug.warn(DEBUG_CATEGORIES.UI, 'FID monitoring failed:', e);
+        }
+
+        // Cumulative Layout Shift (CLS)
+        try {
+          // Check if layout-shift is supported before observing
+          if (PerformanceObserver.supportedEntryTypes && 
+              PerformanceObserver.supportedEntryTypes.includes('layout-shift')) {
+            let clsScore = 0;
+            const clsObserver = new PerformanceObserver((list) => {
+              list.getEntries().forEach((entry) => {
+                if (!entry.hadRecentInput) {
+                  clsScore += entry.value;
+                }
+              });
+            });
+            clsObserver.observe({ type: 'layout-shift', buffered: true });
+          
+            // Report CLS on page unload
+            window.addEventListener('beforeunload', () => {
+              const rating = clsScore <= 0.1 ? 'good' : clsScore <= 0.25 ? 'needs-improvement' : 'poor';
+              trackWebVital('CLS', Math.round(clsScore * 1000), rating);
+            });
+          }
+        } catch (e) {
+          debug.warn(DEBUG_CATEGORIES.UI, 'CLS monitoring failed:', e);
+        }
+      }
+      
+      // Service Worker Registration
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              debug.log(DEBUG_CATEGORIES.SERVICEWORKER, 'Service Worker registered successfully:', registration);
+            })
+            .catch(registrationError => {
+              debug.error(DEBUG_CATEGORIES.SERVICEWORKER, 'Service Worker registration failed:', registrationError);
+            });
+        });
+      }
+    </script>
+
     <!-- Scripts -->
     <script type="module" src="/js/core/main.js"></script>
 </body>

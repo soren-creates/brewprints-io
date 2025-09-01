@@ -1,4 +1,5 @@
 import { ApplicationError, RecipeParsingError } from './application-errors.js';
+import { TIMING } from '../../core/timing-constants.js';
 
 /**
  * Central error handling service for the brewing application
@@ -195,7 +196,7 @@ class ErrorHandler {
     document.body.appendChild(toast);
     
     // Auto-remove after 5 seconds
-    setTimeout(() => this.removeToast(toast), 5000);
+    setTimeout(() => this.removeToast(toast), TIMING.TOAST_DURATION);
     
     // Force browser to recognize the element before animating
     // This ensures the transition works properly

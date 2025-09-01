@@ -3,14 +3,7 @@
  * Handles file loading and app initialization
  */
 
-import { ParserManager } from '../parsers/parser-manager.js';
-import { RecipeValidator } from './recipe-validator.js';
-import { CalculationOrchestrator } from './calculation-orchestrator.js';
-import { RecipeFormatter } from './formatter.js';
-import { RecipeRenderer } from '../ui/recipe-renderer.js';
-import { SectionManager } from '../ui/components/section-manager.js';
-import { PrintControls } from '../ui/components/print-controls.js';
-import { DataPreview } from '../ui/pages/data-preview.js';
+// CRITICAL PATH IMPORTS ONLY - Load immediately for fast startup
 import { HeaderManager } from '../ui/components/header-manager.js';
 import { NavigationManager } from '../ui/components/navigation-manager.js';
 import { errorHandler } from '../utilities/errors/error-handler.js';
@@ -18,39 +11,272 @@ import { EVENTS } from './constants.js';
 import { storageManager } from '../storage/storage-manager.js';
 import { myRecipesPage } from '../ui/pages/my-recipes.js';
 import { clerkAuth } from '../auth/clerk-config.js';
-import { debugToggle } from '../ui/components/debug-toggle.js';
-import { initSharingPerformance } from '../utilities/performance/sharing-performance.js';
+import { debug, DEBUG_CATEGORIES } from '../utilities/debug.js';
+import { TIMING, PERFORMANCE_BUDGET } from './timing-constants.js';
+import { sanitizeText } from '../utilities/validation/security-utils.js';
+import { container } from './dependency-container.js';
+
+
+// Performance Budget Monitor
+class PerformanceBudgetMonitor {
+  constructor(budget) {
+    this.budget = budget;
+    this.violations = [];
+    this.isMonitoring = false;
+  }
+
+  startMonitoring() {
+    if (this.isMonitoring) return;
+    this.isMonitoring = true;
+
+    // Monitor page load timing
+    if ('PerformanceObserver' in window) {
+      this.monitorPageLoadTiming();
+      this.monitorResourceSizes();
+    }
+
+    // Check runtime budgets periodically
+    this.runtimeMonitorInterval = setInterval(() => {
+      this.checkRuntimeBudgets();
+    }, 10000); // Check every 10 seconds
+  }
+
+  monitorPageLoadTiming() {
+    const observer = new PerformanceObserver((list) => {
+      list.getEntries().forEach((entry) => {
+        if (entry.entryType === 'navigation') {
+          this.checkTimingBudget('domContentLoaded', entry.domContentLoadedEventEnd - entry.domContentLoadedEventStart);
+          this.checkTimingBudget('loadEvent', entry.loadEventEnd - entry.loadEventStart);
+        }
+      });
+    });
+    observer.observe({ type: 'navigation', buffered: true });
+  }
+
+  monitorResourceSizes() {
+    const observer = new PerformanceObserver((list) => {
+      let totalJSSize = 0;
+      let totalCSSSize = 0;
+      let totalSize = 0;
+
+      list.getEntries().forEach((entry) => {
+        if (entry.transferSize) {
+          totalSize += entry.transferSize;
+
+          if (entry.name.endsWith('.js')) {
+            totalJSSize += entry.transferSize;
+          } else if (entry.name.endsWith('.css')) {
+            totalCSSSize += entry.transferSize;
+          }
+        }
+      });
+
+      this.checkSizeBudget('initialJSBundle', totalJSSize);
+      this.checkSizeBudget('criticalPathCSS', totalCSSSize);
+      this.checkSizeBudget('totalPageWeight', totalSize);
+    });
+    observer.observe({ type: 'resource', buffered: true });
+  }
+
+  checkTimingBudget(metric, value) {
+    const budget = this.budget[metric];
+    if (budget && value > budget) {
+      this.recordViolation('timing', metric, value, budget);
+    } else if (budget && value <= budget) {
+      debug.log(DEBUG_CATEGORIES.UI, `Performance budget OK: ${metric} = ${Math.round(value)}ms (budget: ${budget}ms)`);
+    }
+  }
+
+  checkSizeBudget(metric, value) {
+    const budget = this.budget[metric];
+    if (budget && value > budget) {
+      this.recordViolation('size', metric, value, budget);
+    } else if (budget && value > 0) {
+      debug.log(DEBUG_CATEGORIES.UI, `Performance budget OK: ${metric} = ${Math.round(value/1000)}KB (budget: ${Math.round(budget/1000)}KB)`);
+    }
+  }
+
+  checkRuntimeBudgets() {
+    // Check lazy module count
+    if (window.brewLogApp?.lazyModulesLoaded?.size > this.budget.maxLazyModules) {
+      this.recordViolation('runtime', 'maxLazyModules', window.brewLogApp.lazyModulesLoaded.size, this.budget.maxLazyModules);
+    }
+
+    // Check cache size
+    if (storageManager?.recipeSummaryCache?.size > this.budget.maxCacheSize) {
+      this.recordViolation('runtime', 'maxCacheSize', storageManager.recipeSummaryCache.size, this.budget.maxCacheSize);
+    }
+
+    // Check inflight requests
+    if (storageManager?.inflightRequests?.size > this.budget.maxInflightRequests) {
+      this.recordViolation('runtime', 'maxInflightRequests', storageManager.inflightRequests.size, this.budget.maxInflightRequests);
+    }
+  }
+
+  recordViolation(type, metric, actual, budget) {
+    const violation = {
+      type,
+      metric,
+      actual,
+      budget,
+      timestamp: Date.now(),
+      url: window.location.pathname
+    };
+
+    this.violations.push(violation);
+    
+    // Keep only last 20 violations
+    if (this.violations.length > 20) {
+      this.violations.shift();
+    }
+
+    // Log warning
+    debug.warn(DEBUG_CATEGORIES.UI, `⚠️ Performance budget violation: ${metric} = ${actual} (budget: ${budget})`);
+
+    // Store violations in localStorage for analysis (production-safe)
+    try {
+      const isProduction = this.detectProductionMode();
+      if (!isProduction) {
+        // Development: Store detailed violation data
+        localStorage.setItem('performance-violations', JSON.stringify(this.violations));
+      } else {
+        // Production: Only store violation count, no detailed data
+        const safeData = {
+          violationCount: this.violations.length,
+          lastViolation: Date.now(),
+          types: [...new Set(this.violations.map(v => v.type))]
+        };
+        localStorage.setItem('performance-violations', JSON.stringify(safeData));
+      }
+    } catch (e) {
+      // Ignore localStorage errors
+    }
+  }
+
+  /**
+   * Detect production mode for security (same logic as debug system)
+   */
+  detectProductionMode() {
+    const hostname = window.location.hostname;
+    const devHostnames = ['localhost', '127.0.0.1', '0.0.0.0'];
+    const isDevHostname = devHostnames.some(devHost => hostname === devHost || hostname.includes(devHost));
+    const hasDevPort = window.location.port && parseInt(window.location.port) < 8000;
+    
+    return !(isDevHostname || hasDevPort || window.location.search.includes('dev=true'));
+  }
+
+  getViolations() {
+    return this.violations;
+  }
+
+  stop() {
+    this.isMonitoring = false;
+    if (this.runtimeMonitorInterval) {
+      clearInterval(this.runtimeMonitorInterval);
+    }
+  }
+}
+
+// LAZY LOADING MODULE MAP - Load modules on-demand
+const LazyModules = {
+  // Recipe processing modules (loaded when uploading/processing recipes)
+  async getParserManager() {
+    const { ParserManager } = await import('../parsers/parser-manager.js');
+    return new ParserManager();
+  },
+  
+  async getRecipeValidator() {
+    const { RecipeValidator } = await import('./recipe-validator.js');
+    return new RecipeValidator();
+  },
+  
+  async getCalculationOrchestrator() {
+    const { CalculationOrchestrator } = await import('./calculation-orchestrator.js');
+    return new CalculationOrchestrator();
+  },
+  
+  async getRecipeFormatter() {
+    const { RecipeFormatter } = await import('./formatter.js');
+    return new RecipeFormatter();
+  },
+  
+  // UI modules (loaded when displaying recipes)
+  async getRecipeRenderer() {
+    const { RecipeRenderer } = await import('../ui/recipe-renderer.js');
+    return new RecipeRenderer();
+  },
+  
+  async getSectionManager() {
+    const { SectionManager } = await import('../ui/components/section-manager.js');
+    return new SectionManager();
+  },
+  
+  // Feature modules (loaded when features are used)
+  async getPrintControls() {
+    const { PrintControls } = await import('../ui/components/print-controls.js');
+    return new PrintControls();
+  },
+  
+  async getDataPreview() {
+    const { DataPreview } = await import('../ui/pages/data-preview.js');
+    return new DataPreview();
+  },
+  
+  async getDebugToggle() {
+    const { debugToggle } = await import('../ui/components/debug-toggle.js');
+    return debugToggle;
+  },
+  
+  async initSharingPerformance() {
+    const { initSharingPerformance } = await import('../utilities/performance/sharing-performance.js');
+    return initSharingPerformance();
+  }
+};
 
 class BrewLogApp {
   constructor() {
-    this.parser = new ParserManager();
-    this.validator = new RecipeValidator();
-    this.calculator = new CalculationOrchestrator();
-    this.formatter = new RecipeFormatter();
-    this.renderer = new RecipeRenderer();
-    this.sectionManager = new SectionManager();
-    this.printControls = new PrintControls();
-    this.dataPreview = new DataPreview();
+    // CRITICAL PATH ONLY - Initialize immediately needed components
     this.headerManager = new HeaderManager();
     this.navigationManager = new NavigationManager();
+    this.initState = 'pending'; // 'pending' | 'initializing' | 'complete'
+    this.queuedAuthStateChanges = []; // Queue auth changes during initialization
+    
+    // LAZY LOADED - Initialize on-demand to reduce startup time
+    this.parser = null;
+    this.validator = null; 
+    this.calculator = null;
+    this.formatter = null;
+    this.renderer = null;
+    this.sectionManager = null;
+    this.printControls = null;
+    this.dataPreview = null;
+    this.debugToggle = null;
+    
+    // Track which lazy modules have been loaded
+    this.lazyModulesLoaded = new Set();
+    
+    // Performance Budget Monitor
+    this.performanceMonitor = new PerformanceBudgetMonitor(PERFORMANCE_BUDGET);
   }
 
   async init() {
     this.setupEventListeners();
-    this.sectionManager.init();
-    this.printControls.init();
+    
+    // Start performance monitoring early
+    this.performanceMonitor.startMonitoring();
+    
+    // Initialize critical path components only
     this.headerManager.init();
     this.navigationManager.init();
     
     // Link navigation manager to header manager for save button state management
     this.headerManager.navigationManager = this.navigationManager;
     
-    // Make headerManager globally accessible for other components
-    window.headerManager = this.headerManager;
+    // Register core components in dependency container
+    container.register('headerManager', this.headerManager);
     myRecipesPage.init();
-    
-    // Make myRecipesPage globally accessible for navigation management
-    window.myRecipesPage = myRecipesPage;
+    container.register('myRecipesPage', myRecipesPage);
+    container.register('navigationManager', this.navigationManager);
     
     // Only show debug controls in development environment
     const isDevelopment = window.location.hostname === 'localhost' || 
@@ -58,7 +284,12 @@ class BrewLogApp {
                          window.location.port !== '';
     
     if (isDevelopment) {
-      debugToggle.init();
+      // Lazy load debug toggle in development mode
+      this.ensureModuleLoaded('debugToggle').then(() => {
+        if (this.debugToggle) {
+          this.debugToggle.init();
+        }
+      });
     }
     
     // Add version display to page
@@ -67,28 +298,33 @@ class BrewLogApp {
     // Enable debug mode for enhanced error logging
     errorHandler.init({ debugMode: true });
     
-    // Initialize performance monitoring for sharing system
-    initSharingPerformance();
-    
-    // Check authentication state on app initialization
-    await clerkAuth.checkAuthState();
-    this.headerManager.updateAuthUI();
+    // Initialize performance monitoring for sharing system (lazy load)
+    LazyModules.initSharingPerformance().catch(error => {
+      debug.warn(DEBUG_CATEGORIES.AUTH, 'Failed to initialize sharing performance:', error);
+    });
     
     // Check if there's a recipe ID in the URL (for sharing) - do this first
     const hasSharedRecipe = await this.checkForSharedRecipe();
     
-    // If no shared recipe was loaded, proceed with normal initialization
+    // If no shared recipe was loaded, proceed with optimistic UI loading
     if (!hasSharedRecipe) {
-      // Run privacy migration for existing users (silent, non-blocking)
-      if (clerkAuth.isUserSignedIn()) {
-        storageManager.migrateRecipePrivacy().catch(error => {
-          console.warn('Privacy migration failed (non-critical):', error);
-        });
-        
-        // Check if logged-in user has saved recipes and show My Recipes if they do
-        await this.checkAndShowMyRecipes();
-      }
+      // Mark initialization as starting
+      this.initState = 'initializing';
+      
+      // OPTIMISTIC LOADING: Show UI immediately, authenticate in background
+      await this.optimisticUILoading();
     }
+    
+    // Mark initial load as complete after auth flow is handled
+    // This allows auth state change events to be processed normally after initialization
+    this.initState = 'complete';
+    
+    // Process any queued auth state changes
+    this.processQueuedAuthStateChanges();
+    
+    // Mark app as initialized to enable normal page visibility rules
+    document.body.classList.add('app-initialized');
+    debug.log(DEBUG_CATEGORIES.AUTH, 'Initial load complete, auth state changes will now be handled');
   }
 
   setupEventListeners() {
@@ -157,17 +393,15 @@ class BrewLogApp {
     
     // Listen for auth state changes to handle sign in/out redirects
     window.addEventListener(EVENTS.AUTH_STATE_CHANGED, async (e) => {
-      if (e.detail.isSignedIn) {
-        // User just signed in, check if they have recipes and redirect if on upload page
-        const currentView = this.navigationManager.getCurrentView();
-        if (currentView === 'upload') {
-          await this.checkAndShowMyRecipes();
-        }
-      } else {
-        // User just signed out, redirect to upload page
-        console.log('User signed out, redirecting to upload page...');
-        this.navigationManager.switchToView('upload');
+      // Handle auth state changes based on initialization state
+      if (this.initState !== 'complete') {
+        debug.log(DEBUG_CATEGORIES.AUTH, `Auth state change during init (${this.initState}), queuing...`);
+        this.queuedAuthStateChanges.push(e.detail);
+        return;
       }
+      
+      // Process the auth state change
+      await this.handleAuthStateChange(e.detail);
     });
   }
 
@@ -177,6 +411,13 @@ class BrewLogApp {
 
     let currentPhase = 'initialization';
     try {
+      // LAZY LOAD: Ensure recipe processing modules are loaded
+      await Promise.all([
+        this.ensureModuleLoaded('parser'),
+        this.ensureModuleLoaded('validator'),
+        this.ensureModuleLoaded('dataPreview')
+      ]);
+
       // Parse phase - extract raw data from file
       currentPhase = 'file_reading';
       const fileContent = await this.readFile(file);
@@ -428,41 +669,388 @@ class BrewLogApp {
   }
 
   /**
+   * Handle auth state changes once initialization is complete
+   */
+  async handleAuthStateChange(authDetail) {
+    if (authDetail.isSignedIn) {
+      // User just signed in, check if they have recipes and redirect if on upload page
+      const currentView = this.navigationManager.getCurrentView();
+      debug.log(DEBUG_CATEGORIES.AUTH, `Auth state changed: user signed in, current view is "${currentView}"`);
+      if (currentView === 'upload') {
+        debug.log(DEBUG_CATEGORIES.AUTH, 'User on upload page, running legacy recipe check...');
+        await this.checkAndShowMyRecipes();
+      } else {
+        debug.log(DEBUG_CATEGORIES.AUTH, `User already on "${currentView}", skipping recipe check`);
+      }
+    } else {
+      // User just signed out, redirect to upload page
+      debug.log(DEBUG_CATEGORIES.AUTH, 'User signed out, redirecting to upload page...');
+      this.navigationManager.switchToView('upload');
+    }
+  }
+
+  /**
+   * Process any queued auth state changes after initialization completes
+   */
+  async processQueuedAuthStateChanges() {
+    if (this.queuedAuthStateChanges.length > 0) {
+      debug.log(DEBUG_CATEGORIES.AUTH, `Processing ${this.queuedAuthStateChanges.length} queued auth state changes`);
+      
+      // Process the most recent auth state change (ignore older ones)
+      const latestAuthChange = this.queuedAuthStateChanges[this.queuedAuthStateChanges.length - 1];
+      await this.handleAuthStateChange(latestAuthChange);
+      
+      // Clear the queue
+      this.queuedAuthStateChanges = [];
+    }
+  }
+
+  /**
    * Check if logged-in user has saved recipes and show My Recipes page if they do
    */
   async checkAndShowMyRecipes() {
     // Only check if user is signed in
     if (!clerkAuth.isUserSignedIn()) {
-      console.log('User not signed in, staying on upload page');
+      debug.log(DEBUG_CATEGORIES.AUTH, 'User not signed in, staying on upload page');
       return;
     }
 
-    console.log('User is signed in, checking for saved recipes...');
+    debug.log(DEBUG_CATEGORIES.AUTH, 'User is signed in, checking for saved recipes...');
 
     try {
       // Give Firebase and storage manager time to initialize properly
       // This is important for the first load after login
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, TIMING.FIREBASE_INIT_DELAY));
       
       // Get user's recipes
       const recipes = await storageManager.listRecipes();
-      console.log(`Found ${recipes ? recipes.length : 0} saved recipes`);
+      debug.log(DEBUG_CATEGORIES.STORAGE, `Found ${recipes ? recipes.length : 0} saved recipes`);
       
       // If user has at least one saved recipe, show My Recipes page
       if (recipes && recipes.length > 0) {
-        console.log('Switching to My Recipes page...');
+        debug.log(DEBUG_CATEGORIES.AUTH, 'Switching to My Recipes page...');
         this.navigationManager.switchToView('my-recipes');
         // Small delay to ensure DOM is ready
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, TIMING.DOM_READY_DELAY));
         await myRecipesPage.show();
       } else {
-        console.log('No saved recipes found, staying on upload page');
+        debug.log(DEBUG_CATEGORIES.STORAGE, 'No saved recipes found, staying on upload page');
       }
     } catch (error) {
       // If there's an error loading recipes, just stay on upload page
-      console.error('Error checking saved recipes:', error);
+      debug.error(DEBUG_CATEGORIES.STORAGE, 'Error checking saved recipes:', error);
       // In case of error, we stay on upload page (already there)
     }
+  }
+
+  /**
+   * Optimistic UI loading pattern (NEW: Performance optimization)
+   * Shows UI immediately while authentication happens in background
+   */
+  async optimisticUILoading() {
+    performance.mark('optimistic-ui-start');
+    
+    // Step 1: Check if we can determine auth state immediately (from cache/storage)
+    const hasLocalSession = this.checkLocalAuthState();
+    
+    if (hasLocalSession) {
+      // Step 2a: Show My Recipes immediately for likely authenticated users
+      debug.log(DEBUG_CATEGORIES.LOADING, 'Optimistic: Showing My Recipes based on local session');
+      this.navigationManager.switchToView('my-recipes');
+      myRecipesPage.showWithLoadingState();
+      
+      // Step 3a: Verify auth and load data in background
+      this.verifyAuthAndLoadData();
+      
+      // Step 3b: Preload likely-needed modules for My Recipes page
+      this.preloadModules(['renderer', 'formatter', 'sectionManager']);
+    } else {
+      // Step 2b: Show upload page for likely anonymous users
+      debug.log(DEBUG_CATEGORIES.LOADING, 'Optimistic: Showing upload page (no local session)');
+      this.navigationManager.switchToView('upload');
+      
+      // Step 3b: Still check auth in background in case user signed in elsewhere
+      this.verifyAuthInBackground();
+    }
+    
+    performance.mark('optimistic-ui-complete');
+    performance.measure('optimistic-ui-load', 'optimistic-ui-start', 'optimistic-ui-complete');
+  }
+
+  /**
+   * Check local authentication state without API calls
+   * Used for optimistic UI decisions
+   */
+  checkLocalAuthState() {
+    // Check for Clerk session indicators in localStorage
+    try {
+      // Clerk stores multiple session-related items, check for various indicators
+      const clerkKeys = [
+        '__clerk_session',
+        '__clerk_session_token', 
+        '__clerk_user_id',
+        '__clerk_auth_state'
+      ];
+      
+      // Look for any Clerk session indicators
+      const hasClerkData = clerkKeys.some(key => {
+        const value = localStorage.getItem(key);
+        return value && value !== 'null' && value !== 'undefined';
+      });
+      
+      // Also check if window.Clerk is already loaded and has a user
+      const hasLoadedSession = window.Clerk?.user?.id;
+      
+      // ENHANCED: Check for cached recipe data as strong session indicator
+      const recipeCachePattern = /^quick_cache_recipes_user_/;
+      const hasCachedRecipes = Object.keys(localStorage).some(key => {
+        if (recipeCachePattern.test(key)) {
+          try {
+            const cached = JSON.parse(localStorage.getItem(key));
+            return cached && cached.recipes && cached.recipes.length > 0;
+          } catch (e) {
+            return false;
+          }
+        }
+        return false;
+      });
+      
+      const hasSession = hasClerkData || hasLoadedSession || hasCachedRecipes;
+      
+      if (hasCachedRecipes && !hasClerkData && !hasLoadedSession) {
+        debug.log(DEBUG_CATEGORIES.AUTH, 'Local auth check: found cached recipes - assuming authenticated user');
+      } else {
+        debug.log(DEBUG_CATEGORIES.AUTH, `Local auth check: ${hasSession ? 'session indicators found' : 'no session indicators'}`);
+      }
+      
+      return hasSession;
+    } catch (error) {
+      debug.warn(DEBUG_CATEGORIES.AUTH, 'Local auth check failed:', error);
+      return false; // Default to showing upload page
+    }
+  }
+
+  /**
+   * Verify authentication and load data in background (non-blocking)
+   */
+  async verifyAuthAndLoadData() {
+    try {
+      // Start auth verification and storage init in parallel
+      const [authResult, storageResult] = await Promise.allSettled([
+        clerkAuth.init(),
+        storageManager.init()
+      ]);
+      
+      // Check actual auth state
+      const isSignedIn = clerkAuth.isUserSignedIn();
+      debug.log(DEBUG_CATEGORIES.AUTH, `Auth verification: ${isSignedIn ? 'confirmed signed in' : 'not signed in'}`);
+      
+      this.headerManager.updateAuthUI();
+      
+      if (isSignedIn) {
+        // User is authenticated - load recipes in background
+        this.loadRecipesInBackground();
+      } else {
+        // User is not authenticated - switch to upload page
+        debug.log(DEBUG_CATEGORIES.AUTH, 'Auth verification failed: switching to upload');
+        this.navigationManager.switchToView('upload');
+      }
+      
+    } catch (error) {
+      debug.error(DEBUG_CATEGORIES.AUTH, 'Background auth verification failed:', error);
+      // Fallback to upload page
+      this.navigationManager.switchToView('upload');
+    }
+  }
+
+  /**
+   * Verify authentication in background for upload page users
+   */
+  async verifyAuthInBackground() {
+    try {
+      await clerkAuth.init();
+      
+      if (clerkAuth.isUserSignedIn()) {
+        // User is actually signed in - switch to My Recipes
+        debug.log(DEBUG_CATEGORIES.AUTH, 'Background check: User is signed in, switching to My Recipes');
+        this.navigationManager.switchToView('my-recipes');
+        myRecipesPage.showWithLoadingState();
+        this.loadRecipesInBackground();
+      }
+      
+      this.headerManager.updateAuthUI();
+      
+    } catch (error) {
+      debug.error(DEBUG_CATEGORIES.AUTH, 'Background auth check failed:', error);
+      // Stay on upload page - no impact to user experience
+    }
+  }
+
+  /**
+   * Load recipes in background without blocking UI (performance optimized)
+   */
+  async loadRecipesInBackground() {
+    try {
+      debug.log(DEBUG_CATEGORIES.AUTH, 'Loading recipes in background...');
+      
+      // Use setTimeout to yield to browser for UI rendering
+      setTimeout(async () => {
+        try {
+          // Load recipes directly (remove caching overhead)
+          const recipes = await storageManager.listRecipes(true);
+          debug.log(DEBUG_CATEGORIES.STORAGE, `Background load complete: Found ${recipes ? recipes.length : 0} saved recipes`);
+          
+          // Update UI with loaded recipes
+          if (recipes && recipes.length > 0) {
+            // Check if recipes are already displayed to avoid duplicate DOM creation
+            const existingCards = document.querySelectorAll('.recipe-card');
+            if (existingCards.length === 0) {
+              debug.log(DEBUG_CATEGORIES.STORAGE, `No existing recipe cards found, rendering ${recipes.length} recipes`);
+              myRecipesPage.recipes = recipes;
+              myRecipesPage.renderRecipes();
+            } else {
+              debug.log(DEBUG_CATEGORIES.STORAGE, `Found ${existingCards.length} existing recipe cards, skipping renderRecipes() to avoid duplication`);
+            }
+          } else {
+            // Show empty state
+            const emptyState = document.getElementById('emptyState');
+            if (emptyState) {
+              emptyState.classList.remove('u-hidden');
+              emptyState.classList.add('u-block');
+            }
+          }
+        } catch (error) {
+          debug.error(DEBUG_CATEGORIES.STORAGE, 'Error during background recipe load:', error);
+        }
+      }, 10); // Small delay to let UI render first
+      
+    } catch (error) {
+      debug.error(DEBUG_CATEGORIES.STORAGE, 'Error initiating background load:', error);
+    }
+  }
+
+  /**
+   * Get user's recipes without artificial delays (optimized for initial load)
+   */
+  async getRecipesWithoutDelay() {
+    try {
+      debug.log(DEBUG_CATEGORIES.AUTH, 'Fast-loading recipes for authenticated user...');
+      
+      // Initialize storage manager if needed
+      await storageManager.init();
+      
+      // Get user's recipes directly (remove caching overhead)
+      const recipes = await storageManager.listRecipes(true);
+      debug.log(DEBUG_CATEGORIES.STORAGE, `Fast-load complete: Found ${recipes ? recipes.length : 0} saved recipes`);
+      
+      return recipes;
+    } catch (error) {
+      debug.error(DEBUG_CATEGORIES.STORAGE, 'Error during fast recipe load:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Lazy load modules on-demand for better performance
+   */
+  async ensureModuleLoaded(moduleName) {
+    if (this.lazyModulesLoaded.has(moduleName)) {
+      return; // Already loaded
+    }
+
+    performance.mark(`lazy-load-${moduleName}-start`);
+    
+    try {
+      switch (moduleName) {
+        case 'parser':
+          if (!this.parser) {
+            this.parser = await LazyModules.getParserManager();
+            debug.log(DEBUG_CATEGORIES.LOADING, 'Lazy loaded: ParserManager');
+          }
+          break;
+          
+        case 'validator':
+          if (!this.validator) {
+            this.validator = await LazyModules.getRecipeValidator();
+            debug.log(DEBUG_CATEGORIES.LOADING, 'Lazy loaded: RecipeValidator');
+          }
+          break;
+          
+        case 'calculator':
+          if (!this.calculator) {
+            this.calculator = await LazyModules.getCalculationOrchestrator();
+            debug.log(DEBUG_CATEGORIES.LOADING, 'Lazy loaded: CalculationOrchestrator');
+          }
+          break;
+          
+        case 'formatter':
+          if (!this.formatter) {
+            this.formatter = await LazyModules.getRecipeFormatter();
+            debug.log(DEBUG_CATEGORIES.LOADING, 'Lazy loaded: RecipeFormatter');
+          }
+          break;
+          
+        case 'renderer':
+          if (!this.renderer) {
+            this.renderer = await LazyModules.getRecipeRenderer();
+            debug.log(DEBUG_CATEGORIES.LOADING, 'Lazy loaded: RecipeRenderer');
+          }
+          break;
+          
+        case 'sectionManager':
+          if (!this.sectionManager) {
+            this.sectionManager = await LazyModules.getSectionManager();
+            this.sectionManager.init();
+            debug.log(DEBUG_CATEGORIES.LOADING, 'Lazy loaded: SectionManager');
+          }
+          break;
+          
+        case 'printControls':
+          if (!this.printControls) {
+            this.printControls = await LazyModules.getPrintControls();
+            this.printControls.init();
+            debug.log(DEBUG_CATEGORIES.LOADING, 'Lazy loaded: PrintControls');
+          }
+          break;
+          
+        case 'dataPreview':
+          if (!this.dataPreview) {
+            this.dataPreview = await LazyModules.getDataPreview();
+            debug.log(DEBUG_CATEGORIES.LOADING, 'Lazy loaded: DataPreview');
+          }
+          break;
+          
+        case 'debugToggle':
+          if (!this.debugToggle) {
+            this.debugToggle = await LazyModules.getDebugToggle();
+            debug.log(DEBUG_CATEGORIES.LOADING, 'Lazy loaded: DebugToggle');
+          }
+          break;
+      }
+      
+      this.lazyModulesLoaded.add(moduleName);
+      performance.mark(`lazy-load-${moduleName}-complete`);
+      performance.measure(`lazy-load-${moduleName}`, `lazy-load-${moduleName}-start`, `lazy-load-${moduleName}-complete`);
+      
+    } catch (error) {
+      debug.error(DEBUG_CATEGORIES.LOADING, `Failed to lazy load ${moduleName}:`, error);
+    }
+  }
+
+  /**
+   * Preload likely-needed modules in background
+   */
+  async preloadModules(moduleNames) {
+    // Load modules in background without blocking
+    setTimeout(async () => {
+      for (const moduleName of moduleNames) {
+        try {
+          await this.ensureModuleLoaded(moduleName);
+        } catch (error) {
+          debug.warn(DEBUG_CATEGORIES.LOADING, `Failed to preload ${moduleName}:`, error);
+        }
+      }
+    }, 100); // Small delay to not interfere with critical path
   }
 
   /**
@@ -591,21 +1179,41 @@ class BrewLogApp {
       title = 'Private Recipe';
     }
     
-    // Create a recipe access message overlay
+    // Create a recipe access message overlay (XSS-safe)
     const overlay = document.createElement('div');
     overlay.className = 'private-recipe-overlay';
-    overlay.innerHTML = `
-      <div class="private-recipe-message">
-        <div class="private-recipe-icon">${icon}</div>
-        <h2>${title}</h2>
-        <p>${message}</p>
-        <div class="private-recipe-actions">
-          <button class="btn btn--primary" onclick="window.location.href = window.location.origin + window.location.pathname">
-            🏠 Go Home
-          </button>
-        </div>
-      </div>
-    `;
+    
+    // Create secure message element to prevent XSS injection
+    const messageContainer = document.createElement('div');
+    messageContainer.className = 'private-recipe-message';
+    
+    const iconElement = document.createElement('div');
+    iconElement.className = 'private-recipe-icon';
+    iconElement.textContent = sanitizeText(icon); // Sanitized for security
+    
+    const titleElement = document.createElement('h2');
+    titleElement.textContent = sanitizeText(title); // Sanitized for security
+    
+    const messageElement = document.createElement('p');
+    messageElement.textContent = sanitizeText(message); // Sanitized - prevents XSS injection
+    
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'private-recipe-actions';
+    
+    const homeButton = document.createElement('button');
+    homeButton.className = 'btn btn--primary';
+    homeButton.textContent = '🏠 Go Home';
+    homeButton.addEventListener('click', () => {
+      window.location.href = window.location.origin + window.location.pathname;
+    });
+    
+    // Assemble the secure message structure
+    actionsContainer.appendChild(homeButton);
+    messageContainer.appendChild(iconElement);
+    messageContainer.appendChild(titleElement);
+    messageContainer.appendChild(messageElement);
+    messageContainer.appendChild(actionsContainer);
+    overlay.appendChild(messageContainer);
     
     // Styles now handled by CSS classes
     
@@ -666,7 +1274,7 @@ class BrewLogApp {
     document.body.appendChild(toast);
     
     // Auto-dismiss after 5 seconds
-    const autoRemoveTimer = setTimeout(() => this.removeToast(toast), 5000);
+    const autoRemoveTimer = setTimeout(() => this.removeToast(toast), TIMING.TOAST_DURATION);
     
     // Store timer reference to cancel if manually closed
     toast.dataset.timer = autoRemoveTimer;
@@ -761,7 +1369,7 @@ class BrewLogApp {
       
       // Create version display element
       const versionDisplay = document.createElement('div');
-      versionDisplay.className = 'version-info';
+      versionDisplay.className = 'version-info u-print-hidden';
       versionDisplay.innerHTML = `ver. ${VERSION_INFO.version}`;
       versionDisplay.title = `Built: ${VERSION_INFO.buildTime} | Branch: ${VERSION_INFO.branch}`;
       
@@ -779,7 +1387,62 @@ class BrewLogApp {
     }
   }
 
+  /**
+   * Clean up application resources
+   * Proper cleanup on page navigation or app shutdown
+   */
+  destroy() {
+    debug.log(DEBUG_CATEGORIES.CORE, 'BrewLogApp cleanup starting...');
+
+    try {
+      // Stop performance monitoring
+      if (this.performanceMonitor) {
+        this.performanceMonitor.stop();
+      }
+
+      // Clear current recipe state
+      window.currentRecipeId = null;
+
+      // Cleanup container dependencies (will call destroy on each)
+      container.cleanup();
+
+      debug.log(DEBUG_CATEGORIES.CORE, 'BrewLogApp cleanup complete');
+    } catch (error) {
+      debug.warn(DEBUG_CATEGORIES.CORE, 'Error during BrewLogApp cleanup:', error);
+    }
+  }
+
 }
+
+// Backward compatibility: Create window property getters that delegate to container
+// This allows existing code to continue using window.headerManager, etc.
+Object.defineProperty(window, 'headerManager', {
+  get() {
+    return container.get('headerManager');
+  },
+  configurable: true
+});
+
+Object.defineProperty(window, 'myRecipesPage', {
+  get() {
+    return container.get('myRecipesPage');
+  },
+  configurable: true
+});
+
+Object.defineProperty(window, 'brewLogApp', {
+  get() {
+    return container.get('brewLogApp');
+  },
+  configurable: true
+});
+
+Object.defineProperty(window, 'navigationManager', {
+  get() {
+    return container.get('navigationManager');
+  },
+  configurable: true
+});
 
 // Export the class for testing
 export { BrewLogApp };
@@ -787,7 +1450,15 @@ export { BrewLogApp };
 // Initialize app
 document.addEventListener('DOMContentLoaded', async () => {
   const app = new BrewLogApp();
-  // Make app globally accessible for upload modal
-  window.brewLogApp = app;
+  // Register main app instance in dependency container
+  container.register('brewLogApp', app);
   await app.init();
+});
+
+// Clean up resources on page unload
+window.addEventListener('beforeunload', () => {
+  const app = container.get('brewLogApp');
+  if (app && typeof app.destroy === 'function') {
+    app.destroy();
+  }
 });

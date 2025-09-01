@@ -43,12 +43,12 @@ class SectionManager {
     // Clear existing controls
     controlsContainer.innerHTML = '';
     
-    // Add controls for each section, with h3 as the collapsible header
+    // Add controls for each section, with h4 as the collapsible header
     const controlsHTML = `
-      <h3 id="sectionControlsCollapsibleHeader" class="section-controls-collapsible-header">
+      <h4 id="sectionControlsCollapsibleHeader" class="section-controls-collapsible-header">
         <span class="arrow">${this.controlsCollapsed ? '▶' : '▼'}</span>
         <span>Section Visibility</span>
-      </h3>
+      </h4>
       <div class="section-controls-content${this.controlsCollapsed ? ' collapsed' : ''}">
         <div class="section-toggles">
           ${this.sections.map(sectionId => this.createSectionToggle(sectionId)).join('')}

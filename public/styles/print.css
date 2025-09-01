@@ -13,8 +13,8 @@
   body, html {
     margin: 0;
     padding: 0;
-    background-color: white !important;
-    color: black !important;
+    background-color: var(--white) !important;
+    color: var(--black) !important;
     font-size: 12pt;
     line-height: 1.4;
   }
@@ -23,7 +23,7 @@
     max-width: none;
     margin: 0;
     padding: 0.5in;
-    background-color: white !important;
+    background-color: var(--white) !important;
     border-radius: 0;
     box-shadow: none;
   }
@@ -33,14 +33,14 @@
   
   .recipe-section {
     margin-bottom: 1rem;
-    background: white !important;
+    background: var(--white) !important;
     box-shadow: none;
     page-break-inside: avoid;
   }
   
   .ingredients-table th, .mash-table th {
     background-color: var(--accent-color) !important;
-    color: white !important;
+    color: var(--white) !important;
   }
   
   .section-title, .stats-title, .recipe-title {
@@ -116,7 +116,7 @@
   
   .stat-range-label {
     font-weight: bold !important;
-    color: black !important;
+    color: var(--black) !important;
     text-align: right !important;
     font-size: 11pt !important;
     line-height: 20px !important;
@@ -129,8 +129,8 @@
   }
   
   .stat-range-bar {
-    background: white !important;
-    border: 1px solid black !important;
+    background: var(--white) !important;
+    border: 1px solid var(--black) !important;
     height: 20px !important;
     min-height: 20px !important;
     max-height: 20px !important;
@@ -141,10 +141,10 @@
     grid-column: 2 !important;
   }
   
-  .range-track { background: white !important; }
+  .range-track { background: var(--white) !important; }
   
   .range-indicator {
-    background: black !important;
+    background: var(--black) !important;
     border: none !important;
     box-shadow: none !important;
     width: 2px !important;
@@ -192,7 +192,7 @@
   
   .stat-range .range-recipe-value {
     font-size: 9pt !important;
-    color: black !important;
+    color: var(--black) !important;
     font-weight: bold !important;
     line-height: 1 !important;
     bottom: 0px !important;
@@ -206,7 +206,7 @@
   
   /* Mash Tun Utilization Progress Bar print */
   .mash-tun-utilization {
-    background: white !important;
+    background: var(--white) !important;
     margin-top: 2px !important;
     page-break-inside: avoid !important;
   }
@@ -215,11 +215,11 @@
   
   .utilization-label { 
     font-weight: bold !important; 
-    color: black !important; 
+    color: var(--black) !important; 
   }
   
   .progress-bar-container {
-    border: 1.5px solid black !important;
+    border: 1.5px solid var(--black) !important;
     border-radius: 6px !important;
     height: 12px !important;
     print-color-adjust: exact !important;
@@ -252,7 +252,7 @@
   
   .utilization-percentage { 
     font-weight: bold !important; 
-    color: black !important; 
+    color: var(--black) !important; 
   }
   
   /* No-sparge print layout fixes */
@@ -267,6 +267,194 @@
   .brew-day-measurements-columns-no-sparge .brew-day-measurements-subsection.column-break-before {
     break-before: column !important;
     page-break-before: avoid !important;
+  }
+
+  /* === DATA PREVIEW PRINT STYLES === */
+  .data-preview-container {
+    max-width: none !important;
+    padding: 0.5in !important;
+    background: var(--white) !important;
+  }
+  
+  .data-preview-header {
+    margin-bottom: 1.5rem !important;
+    page-break-after: avoid !important;
+  }
+  
+  .data-preview-header h1 {
+    color: var(--accent-color) !important;
+    font-size: 24pt !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  .data-preview-header h2 {
+    color: var(--black) !important;
+    font-size: 14pt !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  .data-preview-header p {
+    color: var(--gray-300) !important;
+    font-size: 10pt !important;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Progress statistics in print */
+  .data-preview-stats {
+    max-width: 100% !important;
+    margin: 1rem auto !important;
+  }
+  
+  .progress-stat {
+    margin-bottom: 0.75rem !important;
+    page-break-inside: avoid !important;
+  }
+  
+  .progress-label {
+    font-size: 10pt !important;
+    color: var(--black) !important;
+    margin-bottom: 0.25rem !important;
+  }
+  
+  .progress-count {
+    color: var(--black) !important;
+    font-weight: bold !important;
+  }
+  
+  /* Progress bars for print */
+  .progress-bar {
+    height: 16px !important;
+    border: 1px solid var(--black) !important;
+    background: var(--white) !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+    position: relative !important;
+    overflow: visible !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+  
+  .progress-fill {
+    height: 100% !important;
+    border-radius: 8px !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+  
+  .progress-fill.complete {
+    background-color: var(--success-color) !important;
+  }
+  
+  .progress-fill.incomplete-required {
+    background-color: var(--error-color) !important;
+  }
+  
+  .progress-fill.incomplete-optional {
+    background-color: var(--gray-300) !important;
+  }
+  
+  /* Coverage progress bars */
+  .coverage-found {
+    background-color: var(--success-color) !important;
+  }
+  
+  .coverage-beerxml {
+    background-color: var(--badge-beerxml-text) !important;
+  }
+  
+  .coverage-beerjson {
+    background-color: var(--white) !important;
+  }
+
+  .coverage-beerjson-text {
+    color: color-mix(in srgb, var(--badge-beerjson) 70%, var(--badge-beerjson-text));
+  }
+  
+  /* Hide progress markers and badges for print */
+  .progress-markers,
+  .progress-markers-coverage,
+  .progress-badges {
+    display: none !important;
+  }
+  
+  /* Simplify coverage display for print */
+  .coverage-progress-count {
+    position: static !important;
+    display: inline !important;
+  }
+  
+  /* Data preview sections already look good in print */
+  .data-preview-sections {
+    display: block !important;
+    margin-top: 1rem !important;
+  }
+  
+  .data-section {
+    page-break-inside: avoid !important;
+    margin-bottom: 1rem !important;
+    border: 1px solid var(--gray-400) !important;
+    background: var(--white) !important;
+  }
+  
+  .data-section-title {
+    color: var(--accent-color) !important;
+    font-size: 14pt !important;
+    border-bottom-color: var(--accent-color) !important;
+    page-break-after: avoid !important;
+  }
+
+  .field-label {
+    color: var(--black) !important;
+  }
+  
+  /* Field badges in print */
+  .field-badge {
+    font-size: 8pt !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+  }
+  
+  .badge-present {
+    background-color: var(--success-color) !important;
+    color: var(--white) !important;
+  }
+  
+  .badge-missing-required {
+    background-color: var(--error-color) !important;
+    color: var(--white) !important;
+  }
+  
+  .badge-missing-optional {
+    background-color: var(--gray-300) !important;
+    color: var(--white) !important;
+  }
+  
+  .badge-requires-beerjson {
+    background-color: color-mix(in srgb, var(--badge-beerjson) 70%, var(--badge-beerjson-text)) !important;
+    color: var(--white) !important;
+  }
+
+  .badge-requires-beerxml {
+    background-color: color-mix(in srgb, var(--badge-beerxml) 70%, var(--badge-beerxml-text)) !important;
+    color: var(--white) !important;
+  }
+
+  .badge-not-applicable {
+    color: var(--white) !important;
+  }
+  
+  /* Hide action buttons in print */
+  .data-preview-actions {
+    display: none !important;
+  }
+  
+  /* Hide celebration animations in print */
+  .celebration-101,
+  .celebration-progress-fill,
+  .celebration-badge {
+    animation: none !important;
   }
 
   /* Page breaks */

@@ -19,8 +19,8 @@
 .u-opacity-50 { opacity: 0.5 !important; }
 
 /* Print utilities */
-.u-print-hidden { display: none !important; }
 @media print {
+  .u-print-hidden { display: none !important; }
   .u-print-hidden.u-show-for-print { display: block !important; }
 }
 

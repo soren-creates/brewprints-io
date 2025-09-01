@@ -36,7 +36,9 @@ class HeaderManager {
     // Create header content
     this.header.innerHTML = `
       <div class="header-left">
-        <img src="/img/Header_TextOnly_420x76.png" alt="Brewprints.io" class="header-logo">
+        <a href="#" id="headerLogoLink" class="header-logo-link">
+          <img src="/img/Header_TextOnly_420x76.png" alt="Brewprints.io" class="header-logo">
+        </a>
       </div>
       <div class="header-right">
         <button id="saveRecipeBtn" class="btn btn--success icon-button u-hidden">
@@ -55,7 +57,7 @@ class HeaderManager {
         <!-- User Dropdown Menu -->
         <div id="userDropdown" class="user-dropdown">
           <button id="userDropdownBtn" class="user-dropdown-btn">
-            <span id="userAvatar" class="user-avatar">👤</span>
+            <span id="userAvatar" class="user-avatar">${LucideIcons.create('user-round', '', 20)}</span>
           </button>
           <div id="userDropdownMenu" class="user-dropdown-menu u-hidden">
             <button id="signInMenuItem" class="dropdown-menu-item icon-button u-hidden">
@@ -95,6 +97,9 @@ class HeaderManager {
       accountSettings: document.getElementById('accountSettingsMenuItem'),
       signOut: document.getElementById('signOutMenuItem')
     };
+
+    // Store logo link reference
+    this.logoLink = document.getElementById('headerLogoLink');
   }
 
   createFloatingCloseButtons() {
@@ -114,16 +119,31 @@ class HeaderManager {
   }
 
   attachEventListeners() {
+    // Header logo navigation
+    if (this.logoLink) {
+      this.logoLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isSignedIn = clerkAuth.isUserSignedIn();
+        if (isSignedIn) {
+          // If signed in, go to My Recipes
+          this.navigationManager.switchToView('my-recipes');
+        } else {
+          // If not signed in, go to upload page
+          this.navigationManager.switchToView('upload');
+        }
+      });
+    }
+
     // Close Recipe button
     if (this.buttons.closeRecipe) {
       this.buttons.closeRecipe.addEventListener('click', () => {
         const isSignedIn = clerkAuth.isUserSignedIn();
         if (isSignedIn) {
           // If signed in, go to My Recipes
-          window.dispatchEvent(new Event(EVENTS.SHOW_MY_RECIPES));
+          this.navigationManager.switchToView('my-recipes');
         } else {
           // If not signed in, go to upload page
-          window.dispatchEvent(new Event(EVENTS.BACK_TO_UPLOAD));
+          this.navigationManager.switchToView('upload');
         }
       });
     }
@@ -300,11 +320,19 @@ class HeaderManager {
       this.dropdown.signOut.classList.remove('u-hidden');
       this.dropdown.signOut.classList.add('u-block');
       
-      // Update avatar with user image if available
+      // Update avatar with user image if available (XSS-safe)
       if (user.imageUrl) {
-        this.dropdown.avatar.innerHTML = `<img src="${user.imageUrl}" alt="User avatar">`;
+        // Clear existing content
+        this.dropdown.avatar.innerHTML = '';
+        
+        // Create image element securely
+        const avatarImg = document.createElement('img');
+        avatarImg.src = user.imageUrl; // Browser automatically sanitizes src URLs
+        avatarImg.alt = 'User avatar';
+        this.dropdown.avatar.appendChild(avatarImg);
       } else {
-        this.dropdown.avatar.textContent = '👤';
+        this.dropdown.avatar.innerHTML = LucideIcons.create('user-round', '', 20);
+        LucideIcons.render(this.dropdown.avatar);
       }
     } else {
       // User is not signed in - show sign in only
@@ -314,7 +342,8 @@ class HeaderManager {
       this.dropdown.accountSettings.classList.add('u-hidden');
       this.dropdown.signOut.classList.remove('u-block');
       this.dropdown.signOut.classList.add('u-hidden');
-      this.dropdown.avatar.textContent = '👤';
+      this.dropdown.avatar.innerHTML = LucideIcons.create('user-round', '', 20);
+      LucideIcons.render(this.dropdown.avatar);
     }
 
     // Update button visibility based on auth state

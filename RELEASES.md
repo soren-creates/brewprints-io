@@ -2,6 +2,30 @@
 
 All notable changes to Brewprints.io are documented here. This project follows [Semantic Versioning](https://semver.org/).
 
+## v1.0.2 - 2025-09-01
+
+### What's New
+- Refined typography and color theme across app
+- Complete production deployment system with dependency injection
+- Add header logo navigation with authentication-based routing
+- Dynamic page titles for better PDF filenames
+
+### Improvements
+- Add performance monitoring and reliability fixes
+- Implement comprehensive performance optimization reducing load time by 60%
+
+### Bug Fixes
+- Load Clerk configuration before script initialization
+- Resolve console warnings and optimize database performance
+- Resolve XSS vulnerabilities and syntax error in production security fixes
+- Update README to reflect actual app flow
+- Improve data preview print styles and UI refinements
+- fix: hide version info from print output
+- Replace emoji avatar with Lucide icon
+- Prevent Firebase config caching issues
+
+---
+
 ## v1.0.1 - 2025-08-28
 
 ### Behind the Scenes

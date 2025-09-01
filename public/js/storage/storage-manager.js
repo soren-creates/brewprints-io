@@ -8,6 +8,7 @@ import { errorHandler } from '../utilities/errors/error-handler.js';
 import { clerkAuth } from '../auth/clerk-config.js';
 import { loadingManager } from '../ui/components/loading-manager.js';
 import { EVENTS } from '../core/constants.js';
+import { TIMING } from '../core/timing-constants.js';
 import { debug, DEBUG_CATEGORIES } from '../utilities/debug.js';
 import { shareTokenCache, performanceMonitor } from '../utilities/performance/sharing-performance.js';
 import { LucideIcons } from '../ui/components/lucide-icons.js';
@@ -17,6 +18,23 @@ class StorageManager {
     this.db = null;
     this.isInitialized = false;
     this.initPromise = null;
+    
+    // Firebase Connection Pool
+    this.connectionState = 'unknown';
+    this.heartbeatInterval = null;
+    this.connectionTestTimeout = 3000; // 3 seconds for connection tests
+    this.lastConnectionCheck = 0;
+    this.connectionCheckInterval = 30000; // 30 seconds between checks
+    
+    // Recipe Cache Management - LRU implementation
+    this.recipeCache = new Map();
+    this.recipeSummaryCache = new Map();
+    this.recipeSummaryAccessOrder = new Map(); // Track access order for LRU
+    this.cacheExpiry = 5 * 60 * 1000; // 5 minutes
+    this.maxCacheSize = 50; // Maximum recipes to keep in memory
+    
+    // Request deduplication to prevent concurrent identical requests
+    this.inflightRequests = new Map();
     
     // Offline support
     this.offlineQueue = [];
@@ -82,6 +100,9 @@ class StorageManager {
         }
       });
       
+      // Initialize connection monitoring
+      this.initializeConnectionPool();
+      
       // Firebase initialized successfully
     } catch (error) {
       errorHandler.handleError(error, {
@@ -118,6 +139,522 @@ class StorageManager {
   }
 
   /**
+   * Initialize Firebase connection pool
+   */
+  initializeConnectionPool() {
+    if (!this.db) return;
+    
+    debug.log(DEBUG_CATEGORIES.STORAGE, 'Initializing Firebase connection pool');
+    
+    // Set up periodic connection health monitoring
+    this.heartbeatInterval = setInterval(() => {
+      this.checkConnectionHealth();
+    }, this.connectionCheckInterval);
+    
+    // Initial connection check
+    this.checkConnectionHealth();
+  }
+
+  /**
+   * Check Firebase connection health with caching
+   */
+  async checkConnectionHealth() {
+    const now = Date.now();
+    
+    // Skip check if we recently verified connection
+    if (this.connectionState === 'connected' && 
+        (now - this.lastConnectionCheck) < this.connectionCheckInterval) {
+      debug.log(DEBUG_CATEGORIES.STORAGE, 'Connection recently verified, skipping check');
+      return true;
+    }
+    
+    try {
+      const connectedRef = this.db.ref('.info/connected');
+      const snapshot = await Promise.race([
+        connectedRef.once('value'),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Connection check timeout')), 
+                   this.connectionTestTimeout))
+      ]);
+      
+      const isConnected = snapshot.val();
+      this.connectionState = isConnected ? 'connected' : 'disconnected';
+      this.lastConnectionCheck = now;
+      
+      debug.log(DEBUG_CATEGORIES.STORAGE, `Firebase connection: ${this.connectionState}`);
+      
+      return isConnected;
+    } catch (error) {
+      this.connectionState = 'disconnected';
+      this.lastConnectionCheck = now;
+      debug.warn(DEBUG_CATEGORIES.STORAGE, 'Firebase connection check failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Connection verification - skips expensive tests when possible
+   */
+  async ensureConnection() {
+    // Fast path: If we recently verified connection, trust it
+    if (this.connectionState === 'connected' && 
+        (Date.now() - this.lastConnectionCheck) < (this.connectionCheckInterval / 2)) {
+      return true;
+    }
+    
+    // Need to verify connection
+    return this.checkConnectionHealth();
+  }
+
+  /**
+   * STREAMING SOLUTION: Fast connection check for streaming performance
+   * Reduces timeout from 3s to 1s for reliable speed optimization
+   */
+  async ensureUltraFastConnection() {
+    // Skip expensive connection checks - assume connected if recently verified
+    if (this.connectionState === 'connected' && 
+        (Date.now() - this.lastConnectionCheck) < 1000) { // 1s cache vs 30s
+      return true;
+    }
+    
+    // Fast connection verification with reasonable timeout
+    try {
+      const connectedRef = this.db.ref('.info/connected');
+      const snapshot = await Promise.race([
+        connectedRef.once('value'),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Connection verification timeout')), 1000)) // 1s timeout for fast checks
+      ]);
+      
+      const isConnected = snapshot.val();
+      this.connectionState = isConnected ? 'connected' : 'disconnected';
+      this.lastConnectionCheck = Date.now();
+      
+      debug.log(DEBUG_CATEGORIES.STORAGE, `Fast Firebase connection check: ${this.connectionState}`);
+      return isConnected;
+      
+    } catch (error) {
+      // On timeout, mark as unknown and let normal connection check handle it
+      this.connectionState = 'unknown';
+      debug.log(DEBUG_CATEGORIES.STORAGE, 'Fast connection check failed, will use fallback verification');
+      return false;
+    }
+  }
+
+  /**
+   * Cleanup connection pool resources
+   */
+  destroyConnectionPool() {
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+      debug.log(DEBUG_CATEGORIES.STORAGE, 'Firebase connection pool destroyed');
+    }
+  }
+
+  /**
+   * Complete cleanup of all StorageManager resources
+   * Enhanced memory management and leak prevention
+   */
+  destroy() {
+    debug.log(DEBUG_CATEGORIES.STORAGE, 'StorageManager cleanup starting...');
+
+    // Clear intervals and timers
+    if (this.heartbeatInterval) {
+      clearInterval(this.heartbeatInterval);
+      this.heartbeatInterval = null;
+    }
+
+    if (this.saveDebounceTimer) {
+      clearTimeout(this.saveDebounceTimer);
+      this.saveDebounceTimer = null;
+    }
+
+    // Clear pending operations
+    this.pendingSave = null;
+
+    // Clear performance monitoring
+    if (window.brewLogApp?.performanceMonitor) {
+      try {
+        window.brewLogApp.performanceMonitor.stop();
+      } catch (error) {
+        debug.warn(DEBUG_CATEGORIES.STORAGE, 'Error stopping performance monitor', error);
+      }
+    }
+
+    // Clear caches with proper memory cleanup
+    if (this.recipeCache) {
+      this.recipeCache.clear();
+    }
+    if (this.recipeSummaryCache) {
+      this.recipeSummaryCache.clear();
+    }
+    if (this.recipeSummaryAccessOrder) {
+      this.recipeSummaryAccessOrder.clear();
+    }
+    if (this.inflightRequests) {
+      this.inflightRequests.clear();
+    }
+
+    // Clear offline queue
+    if (this.offlineQueue) {
+      this.offlineQueue.length = 0;
+    }
+
+    // Reset state flags
+    this.isInitialized = false;
+    this.initPromise = null;
+    this.isProcessingQueue = false;
+    this.connectionState = 'unknown';
+
+    debug.log(DEBUG_CATEGORIES.STORAGE, 'StorageManager destroyed and cleaned up');
+  }
+
+  /**
+   * Request deduplication to prevent concurrent identical requests
+   */
+  async deduplicateRequest(key, requestFn) {
+    // If request is already in flight, return the existing promise
+    if (this.inflightRequests.has(key)) {
+      debug.log(DEBUG_CATEGORIES.STORAGE, `Deduplicating concurrent request: ${key}`);
+      return this.inflightRequests.get(key);
+    }
+    
+    // Execute the request and track it
+    const promise = requestFn();
+    this.inflightRequests.set(key, promise);
+    
+    try {
+      const result = await promise;
+      return result;
+    } finally {
+      // Clean up after request completes (success or failure)
+      this.inflightRequests.delete(key);
+    }
+  }
+
+  /**
+   * Intelligent Recipe Cache - Memory-based caching with smart invalidation
+   */
+  getCachedRecipeSummaries(userId, forceRefresh = false) {
+    if (forceRefresh) {
+      this.recipeSummaryCache.delete(userId);
+      this.recipeSummaryAccessOrder.delete(userId);
+      return null;
+    }
+    
+    const cached = this.recipeSummaryCache.get(userId);
+    if (!cached) return null;
+    
+    // Check if cache is still valid
+    if ((Date.now() - cached.timestamp) > this.cacheExpiry) {
+      this.recipeSummaryCache.delete(userId);
+      this.recipeSummaryAccessOrder.delete(userId);
+      return null;
+    }
+    
+    // Update access order for LRU tracking
+    this.recipeSummaryAccessOrder.set(userId, Date.now());
+    
+    debug.log(DEBUG_CATEGORIES.STORAGE, `Cache hit for recipe summaries: ${userId}`);
+    return cached.data;
+  }
+
+  setCachedRecipeSummaries(userId, recipes) {
+    // Enforce cache size limits with LRU eviction
+    if (this.recipeSummaryCache.size >= this.maxCacheSize && !this.recipeSummaryCache.has(userId)) {
+      // Find least recently used entry
+      let lruKey = null;
+      let lruTime = Date.now();
+      
+      for (const [key, accessTime] of this.recipeSummaryAccessOrder) {
+        if (accessTime < lruTime) {
+          lruTime = accessTime;
+          lruKey = key;
+        }
+      }
+      
+      // Remove least recently used entry
+      if (lruKey) {
+        this.recipeSummaryCache.delete(lruKey);
+        this.recipeSummaryAccessOrder.delete(lruKey);
+        debug.log(DEBUG_CATEGORIES.STORAGE, `Evicted LRU cache entry: ${lruKey}`);
+      }
+    }
+    
+    this.recipeSummaryCache.set(userId, {
+      data: recipes,
+      timestamp: Date.now()
+    });
+    
+    // Track access time for LRU
+    this.recipeSummaryAccessOrder.set(userId, Date.now());
+    
+    debug.log(DEBUG_CATEGORIES.STORAGE, `Cached ${recipes.length} recipe summaries for: ${userId}`);
+  }
+
+  getCachedFullRecipe(userId, recipeId, forceRefresh = false) {
+    const cacheKey = `${userId}_${recipeId}`;
+    
+    if (forceRefresh) {
+      this.recipeCache.delete(cacheKey);
+      return null;
+    }
+    
+    const cached = this.recipeCache.get(cacheKey);
+    if (!cached) return null;
+    
+    // Check if cache is still valid
+    if ((Date.now() - cached.timestamp) > this.cacheExpiry) {
+      this.recipeCache.delete(cacheKey);
+      return null;
+    }
+    
+    debug.log(DEBUG_CATEGORIES.STORAGE, `Cache hit for full recipe: ${recipeId}`);
+    return cached.data;
+  }
+
+  setCachedFullRecipe(userId, recipeId, recipe) {
+    const cacheKey = `${userId}_${recipeId}`;
+    
+    // Enforce cache size limits
+    if (this.recipeCache.size >= this.maxCacheSize) {
+      // Remove oldest entry
+      const firstKey = this.recipeCache.keys().next().value;
+      this.recipeCache.delete(firstKey);
+    }
+    
+    this.recipeCache.set(cacheKey, {
+      data: recipe,
+      timestamp: Date.now()
+    });
+    
+    debug.log(DEBUG_CATEGORIES.STORAGE, `Cached full recipe: ${recipeId}`);
+  }
+
+  invalidateRecipeCache(userId, recipeId = null) {
+    // Smart cache invalidation
+    if (recipeId) {
+      // Invalidate specific recipe
+      const cacheKey = `${userId}_${recipeId}`;
+      this.recipeCache.delete(cacheKey);
+      debug.log(DEBUG_CATEGORIES.STORAGE, `Invalidated cache for recipe: ${recipeId}`);
+    }
+    
+    // Always invalidate summaries when any recipe changes
+    this.recipeSummaryCache.delete(userId);
+    this.recipeSummaryAccessOrder.delete(userId);
+    debug.log(DEBUG_CATEGORIES.STORAGE, `Invalidated summary cache for user: ${userId}`);
+  }
+
+  /**
+   * Progressive Data Loading - Load summaries first, full data on-demand
+   */
+  async loadRecipesSummaryOnly(userId) {
+    debug.log(DEBUG_CATEGORIES.STORAGE, `Loading recipe summaries for: ${userId}`);
+    
+    // Check cache first
+    const cached = this.getCachedRecipeSummaries(userId);
+    if (cached) return cached;
+
+    // Use deduplication to prevent concurrent requests for the same user
+    return this.deduplicateRequest(`summary_${userId}`, async () => {
+      // Check cache again in case it was populated during deduplication wait
+      const recentCache = this.getCachedRecipeSummaries(userId);
+      if (recentCache) return recentCache;
+    
+      try {
+        // Load minimal data for list display
+        const snapshot = await this.db.ref(`users/${userId}/recipes`)
+          .orderByChild('savedAt')
+          .limitToLast(20) // Progressive loading - only recent recipes
+          .once('value');
+          
+        const recipes = snapshot.val() || {};
+        
+        // Transform to summary format (minimal data transfer)
+        const summaries = Object.values(recipes).map(recipe => ({
+          id: recipe.id,
+          name: recipe.name || 'Unnamed Recipe',
+          style: recipe.style || 'Unknown Style',
+          savedAt: recipe.savedAt,
+          privacy: recipe.privacy || this.getDefaultPrivacyLevel(),
+          // Key stats only
+          og: recipe.og,
+          fg: recipe.fg,
+          abv: recipe.abv,
+          ibu: recipe.ibu
+          // Note: Full recipe data loaded on-demand when needed
+        }));
+        
+        // Cache the summaries
+        this.setCachedRecipeSummaries(userId, summaries);
+        
+        return summaries;
+      } catch (error) {
+        errorHandler.handleError(error, {
+          component: 'StorageManager',
+          method: 'loadRecipesSummaryOnly',
+          userId
+        });
+        return [];
+      }
+    }); // End deduplication wrapper
+  }
+
+  async loadFullRecipeOptimized(userId, recipeId) {
+    debug.log(DEBUG_CATEGORIES.STORAGE, `Loading full recipe: ${recipeId} for user: ${userId}`);
+    
+    // Check cache first
+    const cached = this.getCachedFullRecipe(userId, recipeId);
+    if (cached) return cached;
+
+    // Use deduplication to prevent concurrent requests for the same recipe
+    return this.deduplicateRequest(`recipe_${userId}_${recipeId}`, async () => {
+      // Check cache again in case it was populated during deduplication wait
+      const recentCache = this.getCachedFullRecipe(userId, recipeId);
+      if (recentCache) return recentCache;
+      
+      try {
+        const snapshot = await this.db.ref(`users/${userId}/recipes/${recipeId}`).once('value');
+        const recipe = snapshot.val();
+        
+        if (recipe) {
+          // Cache the full recipe
+          this.setCachedFullRecipe(userId, recipeId, recipe);
+        }
+        
+        return recipe;
+      } catch (error) {
+        errorHandler.handleError(error, {
+          component: 'StorageManager',
+          method: 'loadFullRecipeOptimized',
+          userId,
+          recipeId
+        });
+        return null;
+      }
+    }); // End deduplication wrapper
+  }
+
+  /**
+   * STREAMING SOLUTION: Load recipes progressively for immediate interactivity
+   * Each recipe becomes interactive as soon as it loads (vs waiting for all recipes)
+   */
+  async loadRecipesStreaming(userId, onRecipeLoaded) {
+    debug.log(DEBUG_CATEGORIES.STORAGE, `Starting streaming load for: ${userId}`);
+    const startTime = performance.now();
+    
+    try {
+      // CRITICAL FIX: Ensure Firebase is initialized before streaming
+      await this.init();
+      
+      // Ensure user is authenticated for streaming
+      await this.ensureValidSessionFast();
+      
+      // STREAMING OPTIMIZATION: Use ultra-fast connection check
+      const connectionStart = performance.now();
+      await this.ensureUltraFastConnection();
+      const connectionTime = performance.now() - connectionStart;
+      debug.log(DEBUG_CATEGORIES.STORAGE, `Ultra-fast connection verified in ${connectionTime.toFixed(1)}ms`);
+
+      // Phase 1: Get recipe data in single query (no shallow query needed - already have full data)
+      debug.log(DEBUG_CATEGORIES.STORAGE, 'Phase 1: Loading recipe data with optimized query...');
+      const idsSnapshot = await this.db.ref(`users/${userId}/recipes`)
+        .orderByChild('savedAt')
+        .limitToLast(20)
+        .once('value');
+      
+      if (!idsSnapshot.val()) {
+        debug.log(DEBUG_CATEGORIES.STORAGE, 'No recipes found for user');
+        return [];
+      }
+      
+      const recipes = idsSnapshot.val();
+      const recipeEntries = Object.entries(recipes);
+      const results = [];
+      
+      debug.log(DEBUG_CATEGORIES.STORAGE, `Phase 2: Streaming ${recipeEntries.length} recipes progressively...`);
+      
+      // Phase 2: Stream individual recipes for progressive interactivity
+      const streamPromises = recipeEntries.map(async ([recipeId, recipeData], index) => {
+        // Stagger requests by 25ms to avoid overwhelming Firebase
+        if (index > 0) {
+          await new Promise(resolve => setTimeout(resolve, 25));
+        }
+        
+        try {
+          const loadStartTime = performance.now();
+          
+          // Create minimal interactive summary from existing data (no additional Firebase call needed!)
+          const summary = {
+            id: recipeData.id || recipeId,
+            name: recipeData.name || 'Unnamed Recipe',
+            style: recipeData.style || 'Unknown Style',
+            savedAt: recipeData.savedAt,
+            privacy: recipeData.privacy || this.getDefaultPrivacyLevel(),
+            og: recipeData.og,
+            fg: recipeData.fg,
+            abv: recipeData.abv,
+            ibu: recipeData.ibu,
+            // CRITICAL: Mark as interactive immediately
+            _interactive: true,
+            _loadTime: performance.now(),
+            _index: index
+          };
+          
+          const loadTime = performance.now() - loadStartTime;
+          debug.log(DEBUG_CATEGORIES.STORAGE, `Recipe ${index + 1}/${recipeEntries.length} ready for interaction: ${summary.name} (${loadTime.toFixed(1)}ms)`);
+          
+          // Make recipe interactive IMMEDIATELY when loaded
+          if (onRecipeLoaded) {
+            onRecipeLoaded(summary, index);
+          }
+          
+          results.push(summary);
+          return summary;
+          
+        } catch (error) {
+          debug.warn(DEBUG_CATEGORIES.STORAGE, `Failed to process recipe ${recipeId}:`, error);
+          return null;
+        }
+      });
+      
+      // Wait for all recipes to complete streaming
+      const loadedRecipes = await Promise.all(streamPromises);
+      const validRecipes = loadedRecipes.filter(recipe => recipe !== null);
+      
+      // Cache final results
+      this.setCachedRecipeSummaries(userId, validRecipes);
+      
+      // HYPER-OPTIMIZATION: Cache in localStorage for instant subsequent loads
+      const localKey = `quick_cache_recipes_${userId}`;
+      try {
+        localStorage.setItem(localKey, JSON.stringify({
+          recipes: validRecipes,
+          timestamp: Date.now()
+        }));
+        debug.log(DEBUG_CATEGORIES.STORAGE, `Cached ${validRecipes.length} recipes in localStorage for instant access`);
+      } catch (e) {
+        debug.warn(DEBUG_CATEGORIES.STORAGE, 'Failed to cache recipes in localStorage:', e);
+      }
+      
+      const totalTime = performance.now() - startTime;
+      debug.log(DEBUG_CATEGORIES.STORAGE, `Streaming complete: ${validRecipes.length} recipes loaded in ${totalTime.toFixed(1)}ms`);
+      
+      return validRecipes;
+      
+    } catch (error) {
+      errorHandler.handleError(error, {
+        component: 'StorageManager',
+        method: 'loadRecipesStreaming',
+        userId
+      });
+      return [];
+    }
+  }
+
+  /**
    * Get recipe image from localStorage (legacy support)
    * @param {string} recipeId - The recipe ID
    * @returns {string|null} - The image data URL or null
@@ -148,20 +685,53 @@ class StorageManager {
       await this.init();
       
       // Get current user ID or use provided ownerId
-      const currentUserId = this.getEffectiveUserId();
-      const targetUserId = ownerId || currentUserId;
+      let currentUserId = this.getEffectiveUserId();
+      let targetUserId = ownerId || currentUserId;
       
-      if (!targetUserId) return null;
+      // If no user ID and we're not using a provided ownerId, wait for Clerk auth to complete
+      if (!targetUserId && !ownerId) {
+        debug.log(DEBUG_CATEGORIES.STORAGE, `🖼️ No user ID yet, waiting for Clerk auth to complete...`);
+        
+        // Wait up to 3 seconds for authentication to complete
+        for (let attempts = 0; attempts < 60; attempts++) {
+          await new Promise(resolve => setTimeout(resolve, 50));
+          currentUserId = this.getEffectiveUserId();
+          if (currentUserId) {
+            targetUserId = currentUserId;
+            debug.log(DEBUG_CATEGORIES.STORAGE, `🖼️ Auth completed after ${(attempts + 1) * 50}ms, got userId: ${targetUserId}`);
+            break;
+          }
+        }
+      }
+      
+      debug.log(DEBUG_CATEGORIES.STORAGE, `🖼️ Firebase image lookup: recipeId=${recipeId}, targetUserId=${targetUserId}`);
+      
+      if (!targetUserId) {
+        debug.log(DEBUG_CATEGORIES.STORAGE, `🖼️ No target user ID available for image lookup after waiting`);
+        return null;
+      }
       
       // Get recipe from Firebase to extract image data
-      const recipeSnapshot = await this.db.ref(`users/${targetUserId}/recipes/${recipeId}`).once('value');
-      if (!recipeSnapshot.exists()) return null;
+      const firebasePath = `users/${targetUserId}/recipes/${recipeId}`;
+      debug.log(DEBUG_CATEGORIES.STORAGE, `🖼️ Firebase path: ${firebasePath}`);
+      
+      const recipeSnapshot = await this.db.ref(firebasePath).once('value');
+      if (!recipeSnapshot.exists()) {
+        debug.log(DEBUG_CATEGORIES.STORAGE, `🖼️ Recipe not found at path: ${firebasePath}`);
+        return null;
+      }
       
       const recipe = recipeSnapshot.val();
+      debug.log(DEBUG_CATEGORIES.STORAGE, `🖼️ Recipe data retrieved:`, {
+        hasImageData: !!recipe.imageData,
+        imageDataLength: recipe.imageData ? recipe.imageData.length : 0,
+        recipeKeys: Object.keys(recipe).slice(0, 10) // First 10 keys
+      });
+      
       return recipe.imageData || null;
       
     } catch (error) {
-      console.warn('Failed to load image from Firebase:', error);
+      debug.error(DEBUG_CATEGORIES.STORAGE, `🖼️ Firebase image load error for ${recipeId}:`, error);
       return null;
     }
   }
@@ -178,8 +748,9 @@ class StorageManager {
   }
 
   /**
-   * Generate a deterministic Firebase UID from Clerk user ID
+   * Generate a deterministic Firebase UID from Clerk user ID (LEGACY - Only used by fallback auth)
    * This ensures consistent mapping between Clerk and Firebase users
+   * NOTE: This method is deprecated in favor of direct Clerk user ID usage
    */
   generateFirebaseUid(clerkUserId) {
     // Use a cryptographic approach to generate consistent UID
@@ -201,9 +772,53 @@ class StorageManager {
   }
 
   /**
-   * Authenticate Firebase with deterministic UID (Spark plan compatible)
+   * Optimized Firebase authentication (SIMPLIFIED: Focus on performance gains)
+   * Skip custom token complexity, optimize existing anonymous auth pattern
    */
-  async authenticateFirebase() {
+  async authenticateFirebaseOptimized() {
+    if (!clerkAuth.isUserSignedIn()) {
+      return false; // Not signed in, skip auth
+    }
+
+    const currentUser = firebase.auth().currentUser;
+    const clerkUserId = clerkAuth.getFirebaseUserId();
+    
+    // Check if already authenticated (skip redundant auth calls)
+    if (currentUser && currentUser.uid) {
+      debug.log(DEBUG_CATEGORIES.AUTH, 'Firebase already authenticated, skipping auth');
+      return true;
+    }
+    
+    try {
+      // Use anonymous auth (faster than complex token logic)
+      await firebase.auth().signInAnonymously();
+      
+      // Store Firebase auth mapping
+      const firebaseUser = firebase.auth().currentUser;
+      if (firebaseUser) {
+        // Use sessionStorage instead of localStorage for faster access
+        sessionStorage.setItem('auth_mapping', JSON.stringify({
+          clerkUserId: clerkUserId,
+          firebaseUid: firebaseUser.uid,
+          timestamp: Date.now()
+        }));
+        
+        debug.log(DEBUG_CATEGORIES.AUTH, 'Firebase authenticated with optimized anonymous auth');
+        return true;
+      }
+      
+    } catch (error) {
+      debug.warn(DEBUG_CATEGORIES.AUTH, 'Optimized auth failed, falling back to legacy:', error);
+      return await this.authenticateFirebaseLegacy();
+    }
+    
+    return false;
+  }
+
+  /**
+   * Legacy Firebase authentication (fallback method)
+   */
+  async authenticateFirebaseLegacy() {
     if (!clerkAuth.isUserSignedIn()) {
       throw new Error('User must be signed in');
     }
@@ -215,7 +830,7 @@ class StorageManager {
     try {
       // Check if we're already authenticated with the correct deterministic UID
       if (currentUser && currentUser.uid === expectedFirebaseUid) {
-        return; // Already properly authenticated
+        return true; // Already properly authenticated
       }
 
       // For this hybrid approach, we'll use a workaround:
@@ -235,25 +850,26 @@ class StorageManager {
           timestamp: Date.now()
         }));
         
-        // Firebase authenticated for Clerk user
+        debug.log(DEBUG_CATEGORIES.AUTH, 'Firebase authenticated with legacy method');
+        return true;
       }
       
     } catch (error) {
       errorHandler.handleError(error, {
         component: 'StorageManager',
-        method: 'authenticateFirebase'
+        method: 'authenticateFirebaseLegacy'
       });
       throw error;
     }
   }
 
   /**
-   * Get the effective user ID for database operations
-   * Uses Clerk user ID to ensure proper user isolation
+   * Get the effective user ID for database operations (OPTIMIZED)
+   * Uses Clerk user ID directly - no Firebase user mapping needed
    * Returns null if user is not authenticated
    */
   getEffectiveUserId() {
-    return clerkAuth.getUserId() || null;
+    return clerkAuth.getFirebaseUserId() || null;
   }
 
   /**
@@ -273,7 +889,8 @@ class StorageManager {
   }
 
   /**
-   * Check if Firebase session is still valid and re-authenticate if needed
+   * Check if Firebase session is still valid and re-authenticate if needed (OPTIMIZED)
+   * Uses new optimized authentication to eliminate dual auth overhead
    */
   async ensureValidSession() {
     const currentUser = firebase.auth().currentUser;
@@ -283,8 +900,39 @@ class StorageManager {
     
     if (!currentUser && clerkUserId) {
       // Session expired, need to re-authenticate
-      debug.log(DEBUG_CATEGORIES.STORAGE, `No Firebase user, authenticating...`);
-      await this.authenticateFirebase();
+      debug.log(DEBUG_CATEGORIES.STORAGE, `No Firebase user, using optimized authentication...`);
+      const success = await this.authenticateFirebaseOptimized();
+      
+      if (!success) {
+        debug.warn(DEBUG_CATEGORIES.STORAGE, 'Authentication failed');
+        return false;
+      }
+    }
+    
+    return true;
+  }
+
+  /**
+   * Optimized session check for initial load - uses optimized auth pattern
+   */
+  async ensureValidSessionFast() {
+    // For initial loads, use anonymous authentication
+    const clerkUserId = clerkAuth.getUserId();
+    if (!clerkUserId) {
+      return false;
+    }
+    
+    const currentUser = firebase.auth().currentUser;
+    if (!currentUser) {
+      // Use anonymous authentication for fast initial load
+      try {
+        const success = await this.authenticateFirebaseOptimized();
+        debug.log(DEBUG_CATEGORIES.STORAGE, success ? 'Fast optimized Firebase auth successful' : 'Fast auth failed');
+        return success;
+      } catch (error) {
+        debug.log(DEBUG_CATEGORIES.STORAGE, 'Fast auth failed, falling back to legacy');
+        return await this.authenticateFirebaseLegacy();
+      }
     }
     
     return true;
@@ -315,22 +963,11 @@ class StorageManager {
     try {
       await this.init();
       
-      // Skip connectivity check if we're testing timeout
+      // Use connection verification instead of expensive tests
       if (!this._forceTimeout) {
-        // Test Firebase connectivity with a simple read operation
-        try {
-          const testRef = this.db.ref('.info/connected');
-          const snapshot = await Promise.race([
-            testRef.once('value'),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Connection test timeout')), 3000))
-          ]);
-          
-          if (!snapshot.val()) {
-            // Firebase reports we're not connected
-            throw new Error('Firebase offline');
-          }
-        } catch (connError) {
-          // Can't reach Firebase - handle as offline
+        const isConnected = await this.ensureConnection();
+        if (!isConnected) {
+          // Firebase reports we're not connected
           loadingManager.hideLoading(loadingId);
           const queueId = this.queueOfflineAction({
             type: 'saveRecipe',
@@ -437,7 +1074,14 @@ class StorageManager {
       // Clear cache for this recipe since it was updated
       shareTokenCache.clear(`recipe_${recipeId}`);
       shareTokenCache.clear(`recipe_${recipeId}_${userId}`);
-      debug.log(DEBUG_CATEGORIES.STORAGE, `Cleared recipe cache after save: ${recipeId}`);
+      
+      // Use intelligent cache invalidation
+      this.invalidateRecipeCache(userId, recipeId);
+      
+      // Clear recipes list cache since it was updated (legacy support)
+      const recipeCacheKey = `recipes_cache_${userId}`;
+      localStorage.removeItem(`cache_${recipeCacheKey}`);
+      debug.log(DEBUG_CATEGORIES.STORAGE, `Cleared recipe and list cache after save: ${recipeId}`);
       
       // Clean up localStorage image after successful save to Firebase
       if (window.recipeImageManager && window.recipeImageManager.clearImageAfterSave) {
@@ -509,8 +1153,8 @@ class StorageManager {
       if (ownerId) {
         try {
           loadingManager.updateLoadingMessage('Accessing shared recipe...', loadingId);
-          const snapshot = await this.db.ref(`users/${ownerId}/recipes/${recipeId}`).once('value');
-          recipe = snapshot.val();
+          // Use streaming load for shared recipes
+          recipe = await this.loadFullRecipeOptimized(ownerId, recipeId);
           
           // For shared recipes, check access permissions
           if (recipe) {
@@ -542,8 +1186,8 @@ class StorageManager {
         // Try to load from current user's recipes first
         if (currentUserId) {
           loadingManager.updateLoadingMessage('Loading your recipe...', loadingId);
-          const snapshot = await this.db.ref(`users/${currentUserId}/recipes/${recipeId}`).once('value');
-          recipe = snapshot.val();
+          // Use streaming load for user's own recipes
+          recipe = await this.loadFullRecipeOptimized(currentUserId, recipeId);
         }
       }
       
@@ -586,12 +1230,19 @@ class StorageManager {
   }
 
   /**
-   * List all saved recipes for the current user
+   * List all saved recipes for the current user - OPTIMIZED with Phase 3 caching
+   * @param {boolean} fastMode - Use optimized session check for initial load
    * @returns {Promise<Array>} - Array of recipe summaries
    */
-  async listRecipes() {
+  async listRecipes(fastMode = false) {
     await this.init();
-    await this.ensureValidSession();
+    
+    // Use faster session check for initial loads
+    if (fastMode) {
+      await this.ensureValidSessionFast();
+    } else {
+      await this.ensureValidSession();
+    }
     
     // Check if user is authenticated
     const userId = this.getEffectiveUserId();
@@ -599,29 +1250,8 @@ class StorageManager {
       return []; // Return empty array if not signed in
     }
     
-    try {
-      const snapshot = await this.db.ref(`users/${userId}/recipes`).once('value');
-      const recipes = snapshot.val() || {};
-      
-      // Convert to array and add summary info
-      return Object.values(recipes).map(recipe => ({
-        id: recipe.id,
-        name: recipe.name || 'Unnamed Recipe',
-        style: recipe.style || 'Unknown Style',
-        savedAt: recipe.savedAt,
-        privacy: recipe.privacy || this.getDefaultPrivacyLevel(), // Include privacy field
-        og: recipe.og,
-        fg: recipe.fg,
-        abv: recipe.abv,
-        ibu: recipe.ibu
-      }));
-    } catch (error) {
-      errorHandler.handleError(error, {
-        component: 'StorageManager',
-        method: 'listRecipes'
-      });
-      return [];
-    }
+    // Use summary loading with intelligent caching
+    return this.loadRecipesSummaryOnly(userId);
   }
 
   /**
@@ -644,6 +1274,14 @@ class StorageManager {
       // Also remove the recipe image from localStorage
       const imageKey = `recipe_image_${recipeId}`;
       localStorage.removeItem(imageKey);
+      
+      // Use intelligent cache invalidation
+      this.invalidateRecipeCache(userId, recipeId);
+      
+      // Clear recipes list cache since it was updated (legacy support)
+      const recipeCacheKey = `recipes_cache_${userId}`;
+      localStorage.removeItem(`cache_${recipeCacheKey}`);
+      debug.log(DEBUG_CATEGORIES.STORAGE, `Cleared recipes cache after delete: ${recipeId}`);
       
       // Recipe deleted successfully
     } catch (error) {
@@ -901,6 +1539,10 @@ class StorageManager {
       // Clear cache for this recipe since privacy changed
       shareTokenCache.clear(`token_${recipeId}`);
       shareTokenCache.clear(`recipe_${recipeId}`);
+      
+      // Clear recipes list cache since privacy was updated
+      const recipeCacheKey = `recipes_cache_${userId}`;
+      localStorage.removeItem(`cache_${recipeCacheKey}`);
       debug.log(DEBUG_CATEGORIES.STORAGE, `Cleared cache for recipe after privacy change: ${recipeId}`);
     } catch (error) {
       errorHandler.handleError(error, {
@@ -1204,7 +1846,9 @@ class StorageManager {
       }
       
       // Update access tracking (fire and forget)
-      this.updateTokenAccess(shareToken).catch(console.error);
+      this.updateTokenAccess(shareToken).catch(error => {
+        debug.warn(DEBUG_CATEGORIES.STORAGE, 'Failed to update token access tracking', error);
+      });
       
       return recipe;
       
@@ -1997,6 +2641,123 @@ class StorageManager {
    */
   hasPendingSave() {
     return this.pendingSave !== null;
+  }
+
+  /**
+   * Get cached data from localStorage with expiry check
+   * @param {string} key - Cache key
+   * @param {number} maxAge - Maximum age in milliseconds
+   * @returns {any|null} - Cached data or null if expired/missing
+   */
+  getCachedData(key, maxAge) {
+    try {
+      const cached = localStorage.getItem(`cache_${key}`);
+      if (!cached) return null;
+      
+      const { data, timestamp } = JSON.parse(cached);
+      if (Date.now() - timestamp > maxAge) {
+        localStorage.removeItem(`cache_${key}`);
+        return null;
+      }
+      
+      return data;
+    } catch (error) {
+      debug.warn(DEBUG_CATEGORIES.STORAGE, 'Failed to get cached data:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Set cached data in localStorage with timestamp
+   * @param {string} key - Cache key
+   * @param {any} data - Data to cache
+   */
+  setCachedData(key, data) {
+    try {
+      localStorage.setItem(`cache_${key}`, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }));
+    } catch (error) {
+      debug.warn(DEBUG_CATEGORIES.STORAGE, 'Cache storage failed:', error);
+    }
+  }
+
+  /**
+   * List all saved recipes for the current user with caching
+   * @param {boolean} fastMode - Use optimized session check for initial load
+   * @param {boolean} forceRefresh - Force refresh from Firebase, ignoring cache
+   * @returns {Promise<Array>} - Array of recipe summaries
+   */
+  async listRecipesWithCache(fastMode = false, forceRefresh = false) {
+    const userId = this.getEffectiveUserId();
+    if (!userId) {
+      return []; // Return empty array if not signed in
+    }
+
+    const cacheKey = `recipes_cache_${userId}`;
+    const cacheExpiry = 5 * 60 * 1000; // 5 minutes
+    
+    // Check cache first unless forcing refresh
+    if (!forceRefresh) {
+      const cached = this.getCachedData(cacheKey, cacheExpiry);
+      if (cached) {
+        debug.log(DEBUG_CATEGORIES.STORAGE, 'Using cached recipes data');
+        return cached;
+      }
+    }
+    
+    // Fetch from Firebase with summary-only data
+    const recipes = await this.listRecipesSummaryOnly(fastMode);
+    
+    // Cache the results
+    this.setCachedData(cacheKey, recipes);
+    
+    return recipes;
+  }
+
+  /**
+   * List recipes with summary data only (optimized for performance)
+   * @param {boolean} fastMode - Use optimized session check for initial load
+   * @returns {Promise<Array>} - Array of recipe summaries
+   */
+  async listRecipesSummaryOnly(fastMode = false) {
+    await this.init();
+    
+    if (fastMode) {
+      await this.ensureValidSessionFast();
+    } else {
+      await this.ensureValidSession();
+    }
+    
+    const userId = this.getEffectiveUserId();
+    if (!userId) return [];
+    
+    try {
+      // Fetch only summary fields to reduce data transfer
+      const snapshot = await this.db.ref(`users/${userId}/recipes`)
+        .orderByChild('savedAt')
+        .limitToLast(50) // Limit initial load
+        .once('value');
+        
+      const recipes = snapshot.val() || {};
+      
+      return Object.values(recipes).map(recipe => ({
+        id: recipe.id,
+        name: recipe.name || 'Unnamed Recipe',
+        style: recipe.style || 'Unknown Style',
+        savedAt: recipe.savedAt,
+        privacy: recipe.privacy || this.getDefaultPrivacyLevel(),
+        og: recipe.og,
+        fg: recipe.fg,
+        abv: recipe.abv,
+        ibu: recipe.ibu
+        // Note: Full recipe data loaded on-demand when needed
+      }));
+    } catch (error) {
+      errorHandler.handleError(error, { component: 'StorageManager', method: 'listRecipesSummaryOnly' });
+      return [];
+    }
   }
 }
 

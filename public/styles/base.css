@@ -1,20 +1,39 @@
 /* Base styles */
 :root {
-    /* Gray Scale System */
+    /* Theme Color Scheme Variables */
+    --theme-hue: 280;               /* Purple hue (0-360) */
+    --theme-chroma: 0.025;           /* Base chroma for OKLCH (0-0.4 max) */
+    --theme-tint: hsl(var(--theme-hue), 30%, 50%);  /* Theme color for mixing */
+    --theme-tint-amount: 8%;        /* How much theme color to mix in */
+    
+    /* Base neutral grays for mixing */
+    --neutral-900: #0a0a0a;
+    --neutral-800: #171717;
+    --neutral-700: #1f1f1f;
+    --neutral-600: #2a2a2a;
+    --neutral-500: #333333;
+    --neutral-400: #4a4a4a;
+    
+    /* Gray Scale System - Dynamic theme-tinted grays using color-mix */
     --black: #000000;               /* Pure black */
-    --gray-900: #0a0a0a;            /* Darkest - page background */
-    --gray-800: #121212;            /* Content containers */
-    --gray-600: #2a2a2a;            /* Elevated surfaces */
-    --gray-500: #333333;            /* Controls/interactive */
-    --gray-400: #444444;            /* Borders/separators */
-    --gray-350: #757575;            /* Disabled text */
-    --gray-300: #888888;            /* Print gray/muted text */
-    --gray-200: #9e9e9e;            /* Disabled/optional states */
+    --gray-900: color-mix(in srgb, var(--neutral-900) calc(100% - var(--theme-tint-amount)), var(--theme-tint));
+    --gray-800: color-mix(in srgb, var(--neutral-800) calc(100% - var(--theme-tint-amount)), var(--theme-tint));
+    --gray-700: color-mix(in srgb, var(--neutral-700) calc(100% - var(--theme-tint-amount)), var(--theme-tint));
+    --gray-600: color-mix(in srgb, var(--neutral-600) calc(100% - var(--theme-tint-amount)), var(--theme-tint));
+    --gray-500: color-mix(in srgb, var(--neutral-500) calc(100% - var(--theme-tint-amount)), var(--theme-tint));
+    --gray-400: color-mix(in srgb, var(--neutral-400) calc(100% - var(--theme-tint-amount)), var(--theme-tint));
+    --gray-350: #757575;            /* Disabled text - keeping neutral */
+    --gray-300: #888888;            /* Print gray/muted text - keeping neutral */
+    --gray-200: #9e9e9e;            /* Disabled/optional states - keeping neutral */
     --muted-text-color: #b0b0b0;    /* Muted text */
     --text-color: #e0e0e0;          /* Main text color */
+    --text-hover-color: #f5f5f5;   /* Text hover state */
     --white: #ffffff;               /* Pure white */
     
-    /* Semantic Colors */
+    /* Semantic Colors - Using dynamic theme mixing */
+    --header-background-color: var(--gray-700);
+    --header-border-color: color-mix(in srgb, var(--gray-400) 80%, var(--gray-500));
+    --body-background-color: color-mix(in srgb, var(--gray-900) 70%, var(--gray-800));
     --accent-color: #429eff;
     --success-color: #4fbb40;
     --warning-color: #eab308;
@@ -49,8 +68,8 @@
     --rainbow-9: #ff0080;
     
     /* Overlay & Backdrop Colors */
-    --overlay-transparent: rgba(0, 0, 0, 0);
-    --overlay-light: rgba(0, 0, 0, 0.4);
+    --overlay-transparent: rgba(0, 0, 0, 0.2);
+    --overlay-light: rgba(0, 0, 0, 0.5);
     --overlay-medium: rgba(0, 0, 0, 0.7);
     --gradient-overlay: linear-gradient(to left, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 100%);
     
@@ -65,6 +84,7 @@
 
     /* Spacing and Layout */
     --max-width: 8.5in;
+    --border-radius-2xl: 12px;
     --border-radius: 4px;
     --border-radius-sm: 3px;
     --box-shadow: 0 2px 4px var(--shadow-color);
@@ -85,11 +105,13 @@
     
     /* Component-Specific Dimensions */
     --header-height: 60px;
-    --floating-button-size: 40px;
+    --header-content-height: 40px;
+    --floating-button-size: 50px;
     --modal-max-width: 500px;
     --container-max-width: 1200px;
-    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    --heading-font-family: "gluten-variable", sans-serif;
+    --system-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Tahoma, Geneva, Verdana, sans-serif;
+    --heading-font-family: "Fredericka the Great", sans-serif;
+    --alt-heading-font-family: "gambado-scotch", serif;
     --subheading-font-family: "grandstander-variable", sans-serif;
     --body-font-family: "ivysoft-variable", sans-serif;
     --base-font-size: 16px;
@@ -119,11 +141,11 @@
 }
 
 body {
-    font-family: "ivysoft-variable", sans-serif;
+    font-family: var(--body-font-family), sans-serif;
     max-width: 800px;
     margin: 0 auto;
     padding: var(--spacing-md);
-    background-color: var(--gray-900);
+    background-color: var(--body-background-color);
     color: var(--text-color);
     line-height: 1.3;
     font-size: 16px;
@@ -158,7 +180,7 @@ h3,
 h4,
 h5,
 h6 {
-    font-family: "gluten-variable", sans-serif;
+    font-family: var(--heading-font-family), sans-serif;
     color: var(--text-color);
     line-height: 1.1;
     margin-bottom: 0.5em;
@@ -166,14 +188,14 @@ h6 {
 
 h1,
 h2 {
-    font-family: "gluten-variable", sans-serif;
+    font-family: var(--heading-font-family), sans-serif;
 }
 
 h3,
 h4,
 h5,
 h6 {
-    font-family: "grandstander-variable", sans-serif;
+    font-family: var(--subheading-font-family), sans-serif;
 }
 
 h1 {
@@ -185,7 +207,8 @@ h2 {
 }
 
 h3 {
-    font-size: 1.1em;
+    font-size: 1.4em;
+    margin-bottom: 0.1em;
 }
 
 h4 {
@@ -249,6 +272,11 @@ a:hover {
 
 .page:not(.active) {
     display: none;
+}
+
+/* Hide all pages initially except the loading container during app initialization */
+body:not(.app-initialized) .page:not(#initialLoadingContainer) {
+    display: none !important;
 }
 
 #recipe-page {
@@ -324,8 +352,25 @@ a:hover {
 /* OKLCH Color Support - Enhanced colors for modern browsers */
 @supports (color: oklch(50% 0.1 180)) {
     :root {
-        /* Semantic Colors */
-        --accent-color: oklch(67% 0.18 254);
+        /* Theme-tinted Gray Scale with OKLCH */
+        --gray-900: oklch(8% calc(var(--theme-chroma) * 0.5) var(--theme-hue));
+        --gray-800: oklch(15% calc(var(--theme-chroma) * 0.75) var(--theme-hue));
+        --gray-700: oklch(20% var(--theme-chroma) var(--theme-hue));
+        --gray-600: oklch(25% calc(var(--theme-chroma) * 1.25) var(--theme-hue));
+        --gray-500: oklch(30% calc(var(--theme-chroma) * 1.5) var(--theme-hue));
+        --gray-400: oklch(40% calc(var(--theme-chroma) * 1.25) var(--theme-hue));
+        --muted-text-color: oklch(70% var(--theme-chroma) var(--theme-hue));
+        --text-color: oklch(90% var(--theme-chroma) var(--theme-hue));
+        --text-hover-color: oklch(97% calc(var(--theme-chroma) * 5) var(--theme-hue));
+
+        /* Semantic Colors with theme integration */
+        --header-background-color: oklch(18% var(--theme-chroma) var(--theme-hue));
+        --header-border-color: oklch(35% var(--theme-chroma) var(--theme-hue));
+        --body-background-color: oklch(13% var(--theme-chroma) var(--theme-hue));
+        
+        /* Accent Colors */
+        --accent-color: oklch(67% 0.15 254);
+        @media print { --accent-color: oklch(48% 0.15 254); } 
         --success-color: oklch(67% 0.2 142);
         --warning-color: oklch(67% 0.2 86);
         --error-color: oklch(67% 0.2 27);

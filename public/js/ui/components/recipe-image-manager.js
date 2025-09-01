@@ -8,6 +8,7 @@ import {
   isValidFileSize 
 } from '../../utilities/validation/validation-utils.js';
 import { LucideIcons } from './lucide-icons.js';
+import { debug, DEBUG_CATEGORIES } from '../../utilities/debug.js';
 
 class RecipeImageManager {
   constructor() {
@@ -357,7 +358,7 @@ class RecipeImageManager {
         
         this.showPreview(url);
       } catch (error) {
-        console.error('Error processing image:', error);
+        debug.error(DEBUG_CATEGORIES.UI, 'Error processing image', error);
         this.showPreview(url); // Fallback to original URL
       }
     };
@@ -544,7 +545,7 @@ class RecipeImageManager {
           // Handle localStorage quota exceeded
           this.handleStorageQuotaExceeded(key, imageToSave, isAutoConfirm);
         } else {
-          console.error('Failed to save image to localStorage:', error);
+          debug.error(DEBUG_CATEGORIES.STORAGE, 'Failed to save image to localStorage', error);
           
           if (isAutoConfirm) {
             // For auto-confirm (drag & drop), show toast since no modal is open

@@ -2,6 +2,8 @@
  * Firebase Configuration
  */
 
+import { debug, DEBUG_CATEGORIES } from '../utilities/debug.js';
+
 // Cache for the configuration
 let cachedConfig = null;
 
@@ -25,7 +27,7 @@ async function loadFirebaseConfig() {
     cachedConfig = await response.json();
     return cachedConfig;
   } catch (error) {
-    console.error('Failed to load Firebase configuration:', error);
+    debug.error(DEBUG_CATEGORIES.STORAGE, 'Failed to load Firebase configuration', error);
     
     // Fallback configuration for development
     cachedConfig = {

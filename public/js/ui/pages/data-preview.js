@@ -859,31 +859,8 @@ class DataPreview {
     let html = `
       <div class="data-preview-container">
         <div class="data-preview-header">
-          <h1>Recipe Data Analysis</h1>
+          <h1>Recipe Field Coverage</h1>
           <h2>${this.escapeHtml(recipeData.name || 'Untitled Recipe')}</h2>
-
-          <div class="data-preview-notices">
-            ${sourceFormat === 'brewfather' ? `
-            <div class="format-notice brewfather-notice">
-              <span class="notice-badge">Brewfather Format Converted</span>
-              <span class="notice-text">Successfully converted to BeerJSON format with full field coverage</span>
-            </div>` : isBeerJSON ? `
-            <div class="format-notice beerjson-notice">
-              <span class="notice-badge">BeerJSON Format Detected</span>
-              <span class="notice-text">Full field coverage with enhanced ingredient and procedure details</span>
-            </div>` : `
-            <div class="format-notice beerxml-notice">
-              <span class="notice-badge">BeerXML Format Detected</span>
-              <span class="notice-text">${stats.totalBeerJsonFields - stats.totalBeerXmlFields} additional fields available with BeerJSON format</span>
-            </div>`}
-            
-            ${recipeData.isBrewfatherExport && recipeData.equipment?.mashTunDeadspace > 0 ? `
-            <div class="format-notice brewfather-notice">
-              <span class="notice-badge">Brewfather Export Detected</span>
-              <span class="notice-text">Lauter deadspace will be interpreted as recoverable mash tun deadspace</span>
-            </div>` : ''}
-            
-          </div>
 
           <div class="data-preview-stats">
             <div class="progress-stat">

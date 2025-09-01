@@ -154,7 +154,11 @@ export class UploadModal {
     } catch (error) {
       // Show error in modal
       this.showError(error.message || 'Failed to process file');
-      console.error('Upload modal file processing error:', error);
+      errorHandler.handleError(error, {
+        component: 'UploadModal',
+        method: 'handleFile',
+        context: { fileName: file?.name }
+      });
     }
   }
 

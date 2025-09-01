@@ -9,7 +9,7 @@ A specialized web application that converts recipe files (BeerXML 1.0, BeerJSON 
 - **Cloud Storage**: Save and share recipes with Firebase integration
 - **User Authentication**: Secure user accounts via Clerk authentication
 - **Recipe Privacy**: Control recipe visibility (private, unlisted, public, share tokens)
-- **Data Preview**: Review recipe data before rendering the final log
+- **Data Fields Analysis**: View comprehensive field coverage analysis of recipe data
 - **Print-Optimized Layout**: Clean, professional formatting designed specifically for printing
 - **Section Controls**: Toggle visibility of different recipe sections for customized output
 
@@ -32,10 +32,11 @@ A specialized web application that converts recipe files (BeerXML 1.0, BeerJSON 
 ### Quick Start (Guest Mode)
 1. Open the application at https://brewprints.io
 2. Drag and drop a recipe file (BeerXML, BeerJSON, or Brewfather JSON) or click "Choose File"
-3. Review the data preview to ensure proper parsing
-4. Click "Show Recipe" to generate the brewing log
-5. Use section toggles to customize which parts to include
-6. Print using your browser's print function
+3. The recipe view loads automatically, displaying your formatted brewing log
+4. Use "Section Visibility" controls to customize which parts to include
+5. Click "Data Fields" button to view field coverage analysis (click "Recipe View" to return)
+6. Print either view using your browser's print function
+7. Click the close button to return to the upload page
 
 ### Registered Users
 1. Sign up/sign in to access cloud storage features
@@ -198,7 +199,7 @@ npm run debug           # Interactive debug environment with DOM simulation
 ## Architecture
 
 ### Core Data Flow
-1. **Authentication** → **File Upload** → **Data Preview** → **Recipe Display**
+1. **Authentication** → **File Upload** → **Recipe Display** (with optional **Data Fields** view)
 2. **ParserManager** detects file format and routes to appropriate parser (BeerXML, BeerJSON, or Brewfather)
 3. **RecipeValidator** validates and sanitizes recipe data, applying brewing domain defaults
 4. **CalculationOrchestrator** processes brewing calculations with dependency caching

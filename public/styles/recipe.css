@@ -109,6 +109,7 @@
 .recipe-header-center .brewer {
   margin-bottom: 0;
   color: var(--text-color);
+  font-family: var(--alt-heading-font-family);
 }
 
 .recipe-header-center .style,
@@ -524,7 +525,7 @@
 
 .range-recipe-value.recipe-value-left { transform: translateX(-100%) translateX(-6px); }
 .range-recipe-value.recipe-value-right { transform: translateX(6px); }
-.stat-range.in-range .range-recipe-value { color: var(--success-color); }
+.stat-range.in-range .range-recipe-value { color: var(--text-hover-color); }
 .stat-range.out-of-range .range-recipe-value { color: var(--error-color); }
 
 .style-range-highlight {
