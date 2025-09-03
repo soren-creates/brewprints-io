@@ -273,14 +273,8 @@ class StorageManager {
     // Clear pending operations
     this.pendingSave = null;
 
-    // Clear performance monitoring
-    if (window.brewLogApp?.performanceMonitor) {
-      try {
-        window.brewLogApp.performanceMonitor.stop();
-      } catch (error) {
-        debug.warn(DEBUG_CATEGORIES.STORAGE, 'Error stopping performance monitor', error);
-      }
-    }
+    // Performance monitoring cleanup is handled by the main app destroy method
+    // Removed window.brewLogApp access to prevent circular dependency during cleanup
 
     // Clear caches with proper memory cleanup
     if (this.recipeCache) {

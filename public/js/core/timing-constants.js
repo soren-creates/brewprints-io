@@ -14,7 +14,7 @@ export const TIMING = {
   DOM_READY_DELAY: 50,               // 50ms delay for DOM transition
   
   // Image loading timeouts
-  IMAGE_LOAD_TIMEOUT: 2000,          // 2s timeout for recipe image loading
+  IMAGE_LOAD_TIMEOUT: 5000,          // 5s timeout for recipe image loading
   
   // Authentication caching
   AUTH_CACHE_DURATION: 2 * 60 * 1000, // 2 minutes auth cache

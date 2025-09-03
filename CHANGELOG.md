@@ -2,6 +2,25 @@
 
 All notable changes to Brewprints.io are documented here. This project follows [Semantic Versioning](https://semver.org/).
 
+## v1.0.3 - 2025-09-03
+
+### Bug Fixes
+- **My Recipes page stability**: Resolved race conditions and loading issues
+- **Skeleton card management**: Fixed cleanup loops and duplicate card issues
+- **Image loading**: Improved reliability in recipe card image handling
+- **Version management**: Fixed CHANGELOG.md generation and version tracking
+- **Configuration**: Resolved version.json handling in release workflow
+
+### Improvements
+- **Print optimization**: Enhanced layout to fit more brew day content on first page
+- **Performance**: Better loading and cleanup processes in recipe management
+
+### 🔧 Behind the Scenes
+- Refactored deployment scripts
+- Updated release workflow documentation
+
+---
+
 ## v1.0.2 - 2025-09-01
 
 ### What's New

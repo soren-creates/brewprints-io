@@ -48,7 +48,7 @@
     page-break-after: avoid;
   }
   
-  .recipe-title { font-size: 36pt !important; }
+  .recipe-title { font-size: 34pt !important; }
   
   .batch-number-field {
     border-bottom: 1px solid var(--black) !important;

@@ -152,22 +152,17 @@ A specialized web application that converts recipe files (BeerXML 1.0, BeerJSON 
 
 ## Development
 
-No build process required. This is a static web application using vanilla JavaScript with ES6 modules.
-
 ### Local Development Server
 
-**Firebase Serve** (Recommended for full functionality):
+**Firebase Serve** (Recommended - Full Functionality):
 ```bash
 firebase serve
 ```
+- Provides static hosting + Firebase Functions emulation
+- Access at: http://localhost:5000
+- All cloud features work locally
 
-This provides:
-- Static file serving from `public/` directory
-- Firebase Functions emulation for API endpoints
-- Production-like environment with hosting rewrites
-- Typically runs on `http://localhost:5000`
-
-**Static Server Options** (Limited functionality - no cloud features):
+**Alternative Static Servers** (Limited Functionality):
 
 **Visual Studio Code**: Right-click on `public` folder and select "Open with Live Server"
 
@@ -181,22 +176,24 @@ npx http-server public -p 3000
 cd public && python -m http.server 3000
 ```
 
-**Note**: Static servers won't have access to Firebase Functions, so cloud storage and sharing features will use fallback configurations.
+**Note**: Static servers use fallback configuration - cloud features will use production endpoints.
 
-### Testing & Debugging
+### Testing Environment
 
-**Node.js Testing Environment**:
 ```bash
-npm install              # Install testing dependencies (jsdom)
-npm test                 # Run all tests
-npm run debug           # Interactive debug environment with DOM simulation
+npm test                 # Run test suite
 ```
 
 **Browser Testing**: Run test files directly in the browser with web server running.
-
-**Coverage Reports**: Test coverage tracking with detailed reporting available.
+**Test Framework**: Custom testUtils with jsdom
+**No Runtime Dependencies**: Vanilla JavaScript with ES6 modules only
+**Development Dependencies**: jsdom for Node.js testing
 
 ## Architecture
+
+### Application Architecture
+
+No build process required. This is a static web application using vanilla JavaScript with ES6 modules.
 
 ### Core Data Flow
 1. **Authentication** → **File Upload** → **Recipe Display** (with optional **Data Fields** view)

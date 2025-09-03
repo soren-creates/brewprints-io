@@ -34,7 +34,7 @@
 }
 
 /* === LAYOUT === */
-#recipe-page { margin-top: var(--spacing-md); }
+#recipe-page { margin-top: var(--spacing-sm); }
 
 .recipe-container {
   max-width: var(--max-width);

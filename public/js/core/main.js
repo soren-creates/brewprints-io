@@ -875,7 +875,12 @@ class BrewLogApp {
         debug.log(DEBUG_CATEGORIES.AUTH, 'Background check: User is signed in, switching to My Recipes');
         this.navigationManager.switchToView('my-recipes');
         myRecipesPage.showWithLoadingState();
-        this.loadRecipesInBackground();
+        
+        // Wait for cache loading to complete before background load
+        // Cache loading uses 50ms * number of recipes + buffer time
+        setTimeout(() => {
+          this.loadRecipesInBackground();
+        }, 500); // 500ms should be sufficient for most cache loads
       }
       
       this.headerManager.updateAuthUI();
@@ -902,14 +907,16 @@ class BrewLogApp {
           
           // Update UI with loaded recipes
           if (recipes && recipes.length > 0) {
-            // Check if recipes are already displayed to avoid duplicate DOM creation
-            const existingCards = document.querySelectorAll('.recipe-card');
-            if (existingCards.length === 0) {
+            // Check if recipes are already displayed OR loading is in progress
+            const existingCards = document.querySelectorAll('.recipe-card:not(.skeleton-card)');
+            const skeletonCards = document.querySelectorAll('.skeleton-card');
+            
+            if (existingCards.length === 0 && skeletonCards.length === 0) {
               debug.log(DEBUG_CATEGORIES.STORAGE, `No existing recipe cards found, rendering ${recipes.length} recipes`);
               myRecipesPage.recipes = recipes;
               myRecipesPage.renderRecipes();
             } else {
-              debug.log(DEBUG_CATEGORIES.STORAGE, `Found ${existingCards.length} existing recipe cards, skipping renderRecipes() to avoid duplication`);
+              debug.log(DEBUG_CATEGORIES.STORAGE, `Found ${existingCards.length} existing recipe cards and ${skeletonCards.length} skeleton cards, skipping renderRecipes() to avoid duplication`);
             }
           } else {
             // Show empty state
@@ -1403,9 +1410,9 @@ class BrewLogApp {
       // Clear current recipe state
       window.currentRecipeId = null;
 
-      // Cleanup container dependencies (will call destroy on each)
-      container.cleanup();
-
+      // Note: Container cleanup is handled by beforeunload event listener
+      // to avoid circular dependency with container.unregister() calling destroy()
+      
       debug.log(DEBUG_CATEGORIES.CORE, 'BrewLogApp cleanup complete');
     } catch (error) {
       debug.warn(DEBUG_CATEGORIES.CORE, 'Error during BrewLogApp cleanup:', error);

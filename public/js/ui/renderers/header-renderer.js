@@ -52,7 +52,7 @@ class HeaderRenderer extends BaseRenderer {
     const title = `<h1 id="recipe-name" class="recipe-title">${this.escapeHtml(recipe.name)}</h1>`;
     const brewer = this.formatConditional(
       recipe.brewer,
-      `<h2 class="brewer">${this.escapeHtml(recipe.brewer)}</h2>`,
+      `<h3 class="brewer">${this.escapeHtml(recipe.brewer)}</h3>`,
       '<!-- No brewer -->'
     );
     const style = this.formatConditional(

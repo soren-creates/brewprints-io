@@ -245,10 +245,13 @@ export class MyRecipesPage {
         // CRITICAL: Set recipes array immediately to prevent empty state flash
         this.recipes = [...cachedRecipes];
         
+        // Don't clear skeleton cards - let replaceSkeletonWithRecipe() work as designed
+        
         // Initialize image coordination for streaming recipes
         this.loadedImages.clear();
         this.expectedImageCount = cachedRecipes.length;
         this.imagesRevealed = false;
+        this.streamingInProgress = false; // Cache path doesn't need streaming protection
         
         // Set up fallback timeout for coordinated image reveal
         setTimeout(() => {
@@ -284,6 +287,11 @@ export class MyRecipesPage {
           }, index * 50); // 50ms stagger between recipes for smooth progressive loading
         });
         
+        // Clear any remaining skeleton cards after all cache replacements are complete
+        setTimeout(() => {
+          this.clearRemainingSkeletons();
+        }, cachedRecipes.length * 50 + 100); // Wait for all replacements + buffer
+        
         // Start Intersection Observer for Firebase image loading after DOM elements are created
         setTimeout(() => {
           this.loadRecipeImages();
@@ -307,6 +315,13 @@ export class MyRecipesPage {
         });
       } else {
         // No cache - use streaming approach
+        
+        // Initialize image coordination for streaming recipes
+        this.loadedImages.clear();
+        this.expectedImageCount = 0; // Will be set when we know total recipe count
+        this.imagesRevealed = false;
+        this.streamingInProgress = true; // Prevent premature coordination
+        
         const streamedRecipes = await storageManager.loadRecipesStreaming(userId, (recipe, index) => {
           recipeCount++;
           
@@ -337,6 +352,26 @@ export class MyRecipesPage {
 
       // Remove any remaining skeletons
       this.clearRemainingSkeletons();
+      
+      // Set expected image count for coordination system
+      this.expectedImageCount = this.recipes.length;
+      this.streamingInProgress = false; // Allow coordination now
+      
+      // Check if we already have all images loaded and trigger coordination
+      if (this.loadedImages.size >= this.expectedImageCount && !this.imagesRevealed) {
+        debug.log(DEBUG_CATEGORIES.UI, `🖼️ ✨ All ${this.loadedImages.size} images ready, triggering coordinated reveal`);
+        this.imagesRevealed = true;
+        this.revealAllImagesInSequence();
+      }
+      
+      // Set up fallback timeout for coordinated image reveal (for streaming path)
+      setTimeout(() => {
+        if (!this.imagesRevealed && this.loadedImages.size > 0) {
+          debug.log(DEBUG_CATEGORIES.UI, `🖼️ ⏰ Timeout reached, revealing ${this.loadedImages.size}/${this.expectedImageCount} loaded images`);
+          this.imagesRevealed = true;
+          this.revealAllImagesInSequence();
+        }
+      }, 3000);
 
       const totalTime = performance.now() - loadStartTime;
       debug.log(DEBUG_CATEGORIES.STORAGE, `🚀 STREAMING COMPLETE: ${recipeCount} recipes, first interactive in ${firstRecipeTime?.toFixed(1) || 0}ms, total ${totalTime.toFixed(1)}ms`);
@@ -493,10 +528,8 @@ export class MyRecipesPage {
       // Replace skeleton with interactive recipe
       const recipeElement = this.createInteractiveRecipeCard(recipe);
       
-      // ANIMATION FIX: Use requestAnimationFrame to ensure consistent rendering
-      requestAnimationFrame(() => {
-        targetSkeleton.replaceWith(recipeElement);
-      });
+      // Replace immediately to avoid timing issues with cleanup
+      targetSkeleton.replaceWith(recipeElement);
     }
     
     // Add event listeners immediately for interactivity
@@ -1245,7 +1278,8 @@ export class MyRecipesPage {
     debug.log(DEBUG_CATEGORIES.STORAGE, `🖼️ ✅ Image completion tracked for ${recipeId} (${this.loadedImages.size}/${this.expectedImageCount} ready)`);
     
     // Check if all images are completed and start coordinated reveal
-    if (this.loadedImages.size >= this.expectedImageCount && !this.imagesRevealed) {
+    // Don't trigger coordination during streaming - wait until streaming completes
+    if (this.loadedImages.size >= this.expectedImageCount && !this.imagesRevealed && !this.streamingInProgress) {
       this.imagesRevealed = true;
       debug.log(DEBUG_CATEGORIES.STORAGE, `🖼️ ✨ All images completed, starting coordinated reveal sequence...`);
       this.revealAllImagesInSequence();

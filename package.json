@@ -1,6 +1,6 @@
 {
   "name": "brewprints-io",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "type": "module",
   "description": "A specialized web application for converting beer recipes to printable brewing logs",
   "repository": {
@@ -13,25 +13,15 @@
     "homebrew",
     "recipe",
     "beerxml",
-    "beerjson",
-    "brewfather"
+    "beerjson"
   ],
-  "author": "",
+  "author": "Brewprints.io",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/soren-creates/brewprints-io/issues"
   },
   "homepage": "https://brewprints.io",
   "scripts": {
-    "test": "node testing/test-runner.js",
-    "debug": "node testing/interactive-debug.js",
-    "coverage": "node testing/coverage-reporter.js",
-    "build:prod": "node scripts/deploy.js build",
-    "build:dev": "node scripts/deploy.js dev",
-    "deploy": "node scripts/deploy.js build && firebase deploy",
-    "prepare-release": "node scripts/sync-public-release.js",
-    "verify-config": "node scripts/verify-firebase-config.js",
-    "verify-config:local": "node scripts/verify-firebase-config.js --local"
-  },
-  "devDependencies": {}
+    "info": "echo 'This is a showcase repository. Development happens in private repository.'"
+  }
 }

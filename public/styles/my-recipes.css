@@ -1,5 +1,89 @@
 /* My Recipes Page Styles */
 
+/* Skeleton Loading Cards */
+.skeleton-card {
+  height: 101px;
+  background: var(--gray-500);
+  border: 1px solid var(--gray-400);
+  border-radius: var(--border-radius);
+  position: relative;
+  overflow: hidden;
+}
+
+.skeleton-content {
+  padding: var(--spacing-md);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.skeleton-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+}
+
+.skeleton-title {
+  height: 24px;
+  background: var(--gray-400);
+  border-radius: var(--border-radius);
+  flex: 1;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-date {
+  height: 16px;
+  width: 80px;
+  background: var(--gray-400);
+  border-radius: var(--border-radius);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  animation-delay: 0.2s;
+}
+
+.skeleton-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.skeleton-style {
+  height: 18px;
+  width: 120px;
+  background: var(--gray-400);
+  border-radius: var(--border-radius);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  animation-delay: 0.4s;
+}
+
+.skeleton-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.skeleton-button {
+  height: 32px;
+  width: 60px;
+  background: var(--gray-400);
+  border-radius: var(--border-radius);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  animation-delay: 0.6s;
+}
+
+.skeleton-button:nth-child(2) {
+  animation-delay: 0.8s;
+}
+
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
 .my-recipes-container {
   max-width: var(--container-max-width);
   margin: 0 auto;

@@ -11,36 +11,9 @@
     ],
     "rewrites": [
       {
-        "source": "/api/config",
-        "function": "config"
-      },
-      {
         "source": "**/*.!(js|css|png|jpg|jpeg|gif|svg|ico|json)",
         "destination": "/index.html"
-      },
-      {
-        "source": "**/!(*.*)",
-        "destination": "/index.html"
       }
-    ],
-    "predeploy": [
-      "node scripts/deploy.js build"
     ]
-  },
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "ignore": [
-        "node_modules",
-        ".git",
-        "firebase-debug.log",
-        "firebase-debug.*.log",
-        "*.local"
-      ],
-      "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run lint"
-      ]
-    }
-  ]
+  }
 }
