@@ -2753,6 +2753,141 @@ class StorageManager {
       return [];
     }
   }
+
+  /**
+   * Save user feedback to Firebase
+   * @param {Object} feedbackData - The feedback data to save
+   * @returns {Promise<boolean>} - Success status
+   */
+  async saveFeedback(feedbackData) {
+    try {
+      await this.init();
+      
+      // Check if database is available
+      if (!this.db) {
+        console.warn('Firebase database not available, feedback will be saved locally only');
+        return false;
+      }
+      
+      // Create feedback entry
+      const feedbackEntry = {
+        ...feedbackData,
+        timestamp: feedbackData.timestamp || new Date().toISOString(),
+        userId: await this.getCurrentUserId() || 'anonymous',
+        version: window.BUILD_VERSION || 'unknown'
+      };
+
+      // Generate unique feedback ID
+      const feedbackId = `feedback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Save to Firebase under feedback collection with timeout
+      const feedbackRef = this.db.ref(`feedback/${feedbackId}`);
+      
+      // Add 5 second timeout to prevent hanging on feedback (shorter for better UX)
+      const savePromise = feedbackRef.set(feedbackEntry);
+      const timeoutPromise = new Promise((resolve) => 
+        setTimeout(() => resolve('timeout'), 5000)
+      );
+      
+      const result = await Promise.race([
+        savePromise.then(() => 'success').catch(() => 'error'),
+        timeoutPromise
+      ]);
+      
+      if (result === 'success') {
+        debug.log(DEBUG_CATEGORIES.STORAGE, `Feedback saved with ID: ${feedbackId}`);
+        return true;
+      } else {
+        // Timeout or Firebase error - not a real error, just fallback to local storage
+        console.log('Firebase unavailable for feedback, using local storage fallback');
+        return false;
+      }
+      
+    } catch (error) {
+      // Don't throw error for feedback - just log it
+      console.warn('Failed to save feedback to Firebase:', error);
+      errorHandler.handleError(error, { 
+        component: 'StorageManager', 
+        method: 'saveFeedback',
+        feedbackCategory: feedbackData.category 
+      });
+      return false;
+    }
+  }
+
+  /**
+   * Get current user ID for feedback attribution
+   * @returns {Promise<string|null>} - User ID or null if anonymous
+   */
+  async getCurrentUserId() {
+    try {
+      const user = await clerkAuth.getUser();
+      return user?.id || null;
+    } catch (error) {
+      return null; // Anonymous user
+    }
+  }
+
+  /**
+   * Retry uploading locally stored feedback to Firebase
+   * Called automatically on app initialization
+   * @returns {Promise<number>} - Number of feedback items successfully uploaded
+   */
+  async retryPendingFeedback() {
+    try {
+      // Get locally stored feedback
+      const localFeedback = JSON.parse(localStorage.getItem('user_feedback') || '[]');
+      
+      if (localFeedback.length === 0) {
+        return 0;
+      }
+
+      debug.log(DEBUG_CATEGORIES.STORAGE, `Found ${localFeedback.length} pending feedback items to retry`);
+      
+      let successCount = 0;
+      const failedItems = [];
+      
+      // Try to upload each feedback item
+      for (const feedback of localFeedback) {
+        try {
+          // Mark as retry attempt
+          const retryFeedback = {
+            ...feedback,
+            retryUpload: true,
+            retryTimestamp: new Date().toISOString()
+          };
+          
+          const success = await this.saveFeedback(retryFeedback);
+          
+          if (success) {
+            successCount++;
+            debug.log(DEBUG_CATEGORIES.STORAGE, `Successfully uploaded pending feedback from ${feedback.timestamp}`);
+          } else {
+            failedItems.push(feedback);
+          }
+        } catch (error) {
+          // Keep the feedback item if upload fails
+          failedItems.push(feedback);
+        }
+      }
+      
+      // Update local storage with only failed items
+      if (failedItems.length > 0) {
+        localStorage.setItem('user_feedback', JSON.stringify(failedItems));
+        debug.log(DEBUG_CATEGORIES.STORAGE, `${failedItems.length} feedback items still pending`);
+      } else {
+        // All uploaded successfully, clear local storage
+        localStorage.removeItem('user_feedback');
+        debug.log(DEBUG_CATEGORIES.STORAGE, 'All pending feedback uploaded successfully');
+      }
+      
+      return successCount;
+      
+    } catch (error) {
+      console.warn('Error retrying pending feedback:', error);
+      return 0;
+    }
+  }
 }
 
 // Export the class for testing

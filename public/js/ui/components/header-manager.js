@@ -7,6 +7,7 @@ import { EVENTS } from '../../core/constants.js';
 import { clerkAuth } from '../../auth/clerk-config.js';
 import { errorHandler } from '../../utilities/errors/error-handler.js';
 import { LucideIcons } from './lucide-icons.js';
+import { feedbackModal } from './feedback-modal.js';
 
 class HeaderManager {
   constructor() {
@@ -63,6 +64,9 @@ class HeaderManager {
             <button id="signInMenuItem" class="dropdown-menu-item icon-button u-hidden">
               ${LucideIcons.createInline('log-in', 'Sign In', 18)}
             </button>
+            <button id="feedbackMenuItem" class="dropdown-menu-item icon-button">
+              ${LucideIcons.createInline('message-square', 'Give Feedback', 18)}
+            </button>
             <button id="accountSettingsMenuItem" class="dropdown-menu-item icon-button u-hidden">
               ${LucideIcons.createInline('settings', 'Account Settings', 18)}
             </button>
@@ -94,6 +98,7 @@ class HeaderManager {
       menu: document.getElementById('userDropdownMenu'),
       avatar: document.getElementById('userAvatar'),
       signIn: document.getElementById('signInMenuItem'),
+      feedback: document.getElementById('feedbackMenuItem'),
       accountSettings: document.getElementById('accountSettingsMenuItem'),
       signOut: document.getElementById('signOutMenuItem')
     };
@@ -241,6 +246,14 @@ class HeaderManager {
             method: 'signIn'
           });
         }
+      });
+    }
+
+    // Feedback menu item
+    if (this.dropdown.feedback) {
+      this.dropdown.feedback.addEventListener('click', () => {
+        this.closeDropdown();
+        feedbackModal.show();
       });
     }
 

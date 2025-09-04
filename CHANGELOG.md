@@ -2,6 +2,19 @@
 
 All notable changes to Brewprints.io are documented here. This project follows [Semantic Versioning](https://semver.org/).
 
+## v1.0.4 - 2025-09-04
+
+### Behind the Scenes
+
+This release focuses on improving our development and release processes. While these changes don't directly affect the application's functionality, they help us deliver better updates more efficiently.
+
+- Added user feedback collection system to gather brewing experience insights
+- Integrated Google Analytics 4 for better understanding of user behavior
+- Fixed calculator initialization and upload button visibility issues
+- Improved development workflow with enhanced testing and deployment tools
+
+---
+
 ## v1.0.3 - 2025-09-03
 
 ### Bug Fixes

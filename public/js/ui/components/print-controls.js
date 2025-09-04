@@ -5,6 +5,7 @@
 
 import { errorHandler } from '../../utilities/errors/error-handler.js';
 import { DataLoadError } from '../../utilities/errors/application-errors.js';
+import { analyticsManager } from '../../analytics/analytics-manager.js';
 
 class PrintControls {
   constructor() {
@@ -25,6 +26,8 @@ class PrintControls {
     window.addEventListener('beforeprint', () => {
       this.isPrintInProgress = true;
       this.preparePrintLayout();
+      // Track print action
+      analyticsManager.trackRecipePrinted();
     });
 
     window.addEventListener('afterprint', () => {

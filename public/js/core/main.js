@@ -15,6 +15,7 @@ import { debug, DEBUG_CATEGORIES } from '../utilities/debug.js';
 import { TIMING, PERFORMANCE_BUDGET } from './timing-constants.js';
 import { sanitizeText } from '../utilities/validation/security-utils.js';
 import { container } from './dependency-container.js';
+import { analyticsManager } from '../analytics/analytics-manager.js';
 
 
 // Performance Budget Monitor
@@ -375,7 +376,15 @@ class BrewLogApp {
     }
     
     // Listen for data preview navigation events
-    window.addEventListener(EVENTS.CONTINUE_TO_RECIPE, () => this.showRecipeFromPreview());
+    window.addEventListener(EVENTS.CONTINUE_TO_RECIPE, () => {
+      this.showRecipeFromPreview().catch(error => {
+        errorHandler.handleError(error, {
+          component: 'BrewLogApp',
+          method: 'CONTINUE_TO_RECIPE_event',
+          timestamp: new Date().toISOString()
+        });
+      });
+    });
     window.addEventListener(EVENTS.BACK_TO_UPLOAD, () => this.handleBack());
     window.addEventListener(EVENTS.BACK_TO_DATA_PREVIEW, () => {
       this.showDataPreview();
@@ -425,6 +434,10 @@ class BrewLogApp {
       currentPhase = 'parsing';
       const rawRecipeData = this.parser.parseFile(fileContent, file.name);
       
+      // Track successful recipe import
+      const fileFormat = this.detectFileFormat(file.name, fileContent);
+      analyticsManager.trackRecipeImported(fileFormat, true);
+      
       // Validate phase - apply brewing domain defaults and validate ranges
       currentPhase = 'validation';
       const validatedRecipeData = this.validator.validateRecipe(rawRecipeData);
@@ -436,9 +449,14 @@ class BrewLogApp {
       
       // Go directly to recipe view
       currentPhase = 'ui_rendering';
-      this.showRecipeFromPreview();
+      await this.showRecipeFromPreview();
       
     } catch (error) {
+      // Track failed import
+      const fileFormat = this.detectFileFormat(file?.name || 'unknown', '');
+      analyticsManager.trackRecipeImported(fileFormat, false);
+      analyticsManager.trackImportError(fileFormat, currentPhase);
+      
       // Enhanced error context
       const errorContext = {
         phase: currentPhase,
@@ -462,14 +480,27 @@ class BrewLogApp {
     }
   }
   
-  showRecipeFromPreview() {
+  async showRecipeFromPreview() {
     if (!this.navigationManager.validatedData) return;
 
-    let currentPhase = 'calculation';
+    let currentPhase = 'initialization';
     try {
+      // Ensure required modules are loaded
+      currentPhase = 'module-loading';
+      await this.ensureModuleLoaded('calculator');
+      await this.ensureModuleLoaded('formatter');
+      await this.ensureModuleLoaded('renderer');
+      await this.ensureModuleLoaded('sectionManager');
+
       // Calculate phase - orchestrate all brewing calculations
       currentPhase = 'calculation';
       const calculatedData = this.calculator.calculateAll(this.navigationManager.validatedData);
+      
+      // Track recipe calculations performed
+      analyticsManager.trackCalculationUsed('ibu');
+      analyticsManager.trackCalculationUsed('srm');
+      analyticsManager.trackCalculationUsed('abv');
+      analyticsManager.trackRecipeViewed();
       
       // Format phase - format data for display using pre-calculated values
       currentPhase = 'formatting';
@@ -492,6 +523,9 @@ class BrewLogApp {
         // Re-initialize section manager after recipe is rendered, passing the recipe data
         this.sectionManager.setupControls(formattedRecipe);
         this.sectionManager.applyPreferences();
+        
+        // Initialize print controls for recipe view
+        await this.ensureModuleLoaded('printControls');
         
         // Load recipe image if it exists
         this.loadRecipeImage(formattedRecipe.id);
@@ -518,6 +552,40 @@ class BrewLogApp {
       reader.onerror = () => reject(new Error('Failed to read file'));
       reader.readAsText(file);
     });
+  }
+
+  /**
+   * Detect recipe file format for analytics tracking
+   */
+  detectFileFormat(filename, content) {
+    const extension = filename?.toLowerCase().split('.').pop();
+    
+    // Check by file extension first
+    if (extension === 'json') {
+      // Try to detect JSON type by content
+      if (content.includes('"beerjson"') || content.includes('"version"')) {
+        return 'beerjson';
+      } else if (content.includes('"OG"') || content.includes('"ABV"')) {
+        return 'brewfather';
+      } else {
+        return 'json';
+      }
+    } else if (extension === 'xml') {
+      return 'beerxml';
+    } else if (extension === 'bsmx') {
+      return 'beersmith';
+    }
+    
+    // Fall back to content detection
+    if (content.includes('<RECIPE>') || content.includes('<Recipe>')) {
+      return 'beerxml';
+    } else if (content.includes('"beerjson"')) {
+      return 'beerjson';
+    } else if (content.includes('"OG"') && content.includes('"ABV"')) {
+      return 'brewfather';
+    }
+    
+    return 'unknown';
   }
 
   showUploadView() {
@@ -595,8 +663,8 @@ class BrewLogApp {
     // Switch to My Recipes view
     this.navigationManager.switchToView('my-recipes');
     
-    // Show the My Recipes page and load recipes
-    await myRecipesPage.show();
+    // Show the My Recipes page and load recipes with refresh
+    await myRecipesPage.show(false, true);
   }
 
   /**
@@ -844,6 +912,17 @@ class BrewLogApp {
       // Check actual auth state
       const isSignedIn = clerkAuth.isUserSignedIn();
       debug.log(DEBUG_CATEGORIES.AUTH, `Auth verification: ${isSignedIn ? 'confirmed signed in' : 'not signed in'}`);
+      
+      // Retry uploading any pending feedback from previous sessions
+      if (storageResult.status === 'fulfilled') {
+        storageManager.retryPendingFeedback().then(count => {
+          if (count > 0) {
+            debug.log(DEBUG_CATEGORIES.STORAGE, `Successfully uploaded ${count} pending feedback items`);
+          }
+        }).catch(error => {
+          debug.warn(DEBUG_CATEGORIES.STORAGE, 'Error retrying pending feedback:', error);
+        });
+      }
       
       this.headerManager.updateAuthUI();
       

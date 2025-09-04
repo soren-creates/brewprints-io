@@ -233,11 +233,14 @@ export class NavigationManager {
    * }
    */
   switchToView(viewName, options = {}) {
-    // Hide My Recipes floating button on all views except My Recipes
-    if (viewName !== 'my-recipes' && window.myRecipesPage && window.myRecipesPage.floatingUploadBtn) {
-      window.myRecipesPage.floatingUploadBtn.classList.remove('u-flex');
-      window.myRecipesPage.floatingUploadBtn.classList.add('u-hidden');
-    }
+    // Dispatch navigation event for components to handle their own visibility
+    window.dispatchEvent(new CustomEvent('navigation-changed', {
+      detail: { 
+        viewName, 
+        previousView: this.currentView,
+        timestamp: Date.now() 
+      }
+    }));
     
     const config = VIEW_CONFIGS[viewName];
     if (!config) {

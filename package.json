@@ -1,6 +1,6 @@
 {
   "name": "brewprints-io",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "type": "module",
   "description": "A specialized web application for converting beer recipes to printable brewing logs",
   "repository": {

@@ -45,6 +45,40 @@
         ".read": true,
         ".write": "auth != null"
       }
+    },
+    "feedback": {
+      ".read": false,
+      "$feedbackId": {
+        ".write": true,
+        ".validate": "newData.hasChildren(['timestamp', 'satisfaction', 'category'])",
+        "timestamp": {
+          ".validate": "newData.isString()"
+        },
+        "satisfaction": {
+          ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 5"
+        },
+        "category": {
+          ".validate": "newData.isString()"
+        },
+        "message": {
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 1000)"
+        },
+        "email": {
+          ".validate": "!newData.exists() || newData.isString()"
+        },
+        "userId": {
+          ".validate": "!newData.exists() || newData.isString()"
+        },
+        "userAgent": {
+          ".validate": "!newData.exists() || newData.isString()"
+        },
+        "url": {
+          ".validate": "!newData.exists() || newData.isString()"
+        },
+        "version": {
+          ".validate": "!newData.exists() || newData.isString()"
+        }
+      }
     }
   }
 }

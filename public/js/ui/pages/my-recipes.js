@@ -25,6 +25,9 @@ export class MyRecipesPage {
     this.expectedImageCount = 0;
     this.imagesRevealed = false;
     
+    // Add loading state tracking to prevent concurrent loads
+    this.isLoadingRecipes = false;
+    
     // Create debounced versions of performance-sensitive methods
     this.debouncedShareRecipe = debounce(this.shareRecipe.bind(this), 300);
     this.debouncedChangePrivacyAndShare = debounce(this.changePrivacyAndShare.bind(this), 500);
@@ -77,7 +80,37 @@ export class MyRecipesPage {
       console.log('🔄 Offline queue processed, refreshing My Recipes page...', e.detail);
       // Only refresh if we're currently on the My Recipes page
       if (this.container && this.container.classList.contains('active')) {
-        this.loadRecipes();
+        this.loadRecipes(true); // Force refresh after offline queue processing
+      }
+    });
+
+    // Listen for navigation changes to handle upload button visibility and refresh recipes
+    window.addEventListener('navigation-changed', (e) => {
+      const { viewName, previousView } = e.detail;
+      
+      // Ensure upload button is created if it doesn't exist
+      if (!this.floatingUploadBtn) {
+        this.createFloatingUploadButton();
+      }
+      
+      if (viewName === 'my-recipes') {
+        // Show upload button when navigating to My Recipes
+        this.floatingUploadBtn.classList.remove('u-hidden');
+        this.floatingUploadBtn.classList.add('u-flex');
+        debug.log(DEBUG_CATEGORIES.UI, '🔼 Upload button shown for my-recipes view');
+        
+        // Refresh recipe list when navigating back to My Recipes from another view
+        if (previousView && previousView !== 'my-recipes' && !this.isLoadingRecipes) {
+          debug.log(DEBUG_CATEGORIES.UI, '🔄 Refreshing My Recipes list - navigated from:', previousView);
+          this.loadRecipes(true).catch(error => {
+            debug.warn(DEBUG_CATEGORIES.UI, 'Failed to refresh recipes on navigation:', error);
+          });
+        }
+      } else {
+        // Hide upload button when navigating away from My Recipes
+        this.floatingUploadBtn.classList.remove('u-flex');
+        this.floatingUploadBtn.classList.add('u-hidden');
+        debug.log(DEBUG_CATEGORIES.UI, '🔽 Upload button hidden for view:', viewName);
       }
     });
   }
@@ -128,7 +161,7 @@ export class MyRecipesPage {
   /**
    * Show the My Recipes page and load recipes
    */
-  async show(skipPageSwitching = false) {
+  async show(skipPageSwitching = false, forceRefresh = false) {
     if (!this.container) {
       this.init();
     }
@@ -160,7 +193,7 @@ export class MyRecipesPage {
     }
 
     // Load and display recipes
-    await this.loadRecipes();
+    await this.loadRecipes(forceRefresh);
   }
 
   /**
@@ -206,21 +239,28 @@ export class MyRecipesPage {
    * STREAMING SOLUTION: Progressive Data Loading with immediate interactivity
    * Each recipe becomes clickable as soon as it loads (vs waiting for all recipes)
    */
-  async loadRecipes() {
+  async loadRecipes(forceRefresh = false) {
+    // Prevent concurrent loads
+    if (this.isLoadingRecipes) {
+      debug.log(DEBUG_CATEGORIES.STORAGE, '⏸️ Load already in progress, skipping duplicate request');
+      return;
+    }
+
     const recipesList = document.getElementById('recipesList');
     const emptyState = document.getElementById('emptyState');
 
     if (!recipesList) return;
 
-    // Show skeleton cards for perceived performance
-    this.showSkeletonCards(recipesList);
-    emptyState.classList.add('u-hidden');
-
-    let recipeCount = 0;
-    let firstRecipeTime = null;
-    this.recipes = []; // Reset recipes array
+    this.isLoadingRecipes = true;
 
     try {
+      // Show skeleton cards for perceived performance
+      this.showSkeletonCards(recipesList);
+      emptyState.classList.add('u-hidden');
+
+      let recipeCount = 0;
+      let firstRecipeTime = null;
+      this.recipes = []; // Reset recipes array
       let userId = clerkAuth.getFirebaseUserId();
       
       // If Clerk isn't ready yet, try to get user ID from cache for optimistic loading
@@ -228,6 +268,7 @@ export class MyRecipesPage {
         userId = this.tryGetCachedUserId();
         if (!userId) {
           this.showSignInPrompt();
+          this.isLoadingRecipes = false;
           return;
         }
         debug.log(DEBUG_CATEGORIES.LOADING, `Using cached user ID for optimistic loading: ${userId}`);
@@ -235,8 +276,11 @@ export class MyRecipesPage {
 
       const loadStartTime = performance.now();
 
-      // HYPER-OPTIMIZED: Try cache-first approach with progressive display
-      const cachedRecipes = this.tryLoadFromCache(userId);
+      // HYPER-OPTIMIZED: Try cache-first approach with progressive display (unless force refresh)
+      if (forceRefresh) {
+        debug.log(DEBUG_CATEGORIES.STORAGE, '🔄 Force refresh requested - skipping cache');
+      }
+      const cachedRecipes = forceRefresh ? null : this.tryLoadFromCache(userId);
       if (cachedRecipes && cachedRecipes.length > 0) {
         // Show cached recipes PROGRESSIVELY for smooth user experience
         firstRecipeTime = performance.now() - loadStartTime;
@@ -394,6 +438,8 @@ export class MyRecipesPage {
         component: 'MyRecipesPage',
         method: 'loadRecipes'
       });
+    } finally {
+      this.isLoadingRecipes = false;
     }
   }
 
@@ -1137,7 +1183,7 @@ export class MyRecipesPage {
       this.showToast('Recipe deleted successfully', 'success');
       
       // Reload the recipes list
-      await this.loadRecipes();
+      await this.loadRecipes(true); // Force refresh after deleting recipe
     } catch (error) {
       this.showToast('Failed to delete recipe', 'error');
       errorHandler.handleError(error, {
